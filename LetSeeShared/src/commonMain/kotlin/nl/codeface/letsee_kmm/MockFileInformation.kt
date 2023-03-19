@@ -8,7 +8,6 @@ data class MockFileInformation(
     val displayName: String,
     val relativePath: String?
 ) {
-
     enum class MockStatus {
         SUCCESS, FAILURE
     }

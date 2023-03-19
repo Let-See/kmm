@@ -11,6 +11,7 @@
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
+		F804493C29C7237000CFE188 /* Scenarios in Resources */ = {isa = PBXBuildFile; fileRef = F804493B29C7237000CFE188 /* Scenarios */; };
 		F839DA2029BB9288009C23C6 /* somejson.json in Resources */ = {isa = PBXBuildFile; fileRef = F839DA1F29BB921C009C23C6 /* somejson.json */; };
 		F84B906229C101DA0023B5D9 /* Mocks in Resources */ = {isa = PBXBuildFile; fileRef = F84B906129C101DA0023B5D9 /* Mocks */; };
 /* End PBXBuildFile section */
@@ -35,6 +36,7 @@
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F804493B29C7237000CFE188 /* Scenarios */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Scenarios; sourceTree = "<group>"; };
 		F839DA1F29BB921C009C23C6 /* somejson.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = somejson.json; sourceTree = "<group>"; };
 		F84B906129C101DA0023B5D9 /* Mocks */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Mocks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -78,6 +80,7 @@
 		7555FF7D242A565900829871 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				F804493B29C7237000CFE188 /* Scenarios */,
 				F84B906129C101DA0023B5D9 /* Mocks */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
@@ -156,6 +159,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F804493C29C7237000CFE188 /* Scenarios in Resources */,
 				F84B906229C101DA0023B5D9 /* Mocks in Resources */,
 				058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */,
 				058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */,

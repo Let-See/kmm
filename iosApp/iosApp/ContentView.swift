@@ -14,6 +14,8 @@ struct ContentView: View {
 
                var result = x.process(path: Bundle.main.bundlePath + "/Mocks")
                 print("@@",String(data: result.first!.value[0].response!.byteResponse!.toData(), encoding: .utf8))
+
+                DefaultScenarioFileInformation().process(filePath:  Bundle.main.bundlePath + "/Scenarios/FirstScenario.plist")
             })
 	}
 
