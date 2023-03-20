@@ -25,6 +25,12 @@ class DefaultScenarioManager : ScenarioManager {
         _activeScenario.emit(null)
     }
 
+    override suspend fun nextStep() {
+        val activeScenario = activeScenario ?: return
+        activeScenario.nextStep()
+        _activeScenario.emit(activeScenario)
+    }
+
     /**
     The `isScenarioActive` property gets a boolean value indicating whether there is a scenario active or not.
      */

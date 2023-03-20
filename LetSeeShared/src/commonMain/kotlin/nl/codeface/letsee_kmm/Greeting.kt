@@ -2,6 +2,7 @@ package nl.codeface.letsee_kmm
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -178,8 +179,12 @@ class DefaultLetSee(
             }
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val singleThreadDispatcher = Dispatchers.Default.limitedParallelism(1)
+
     override fun addRequest(request: Request, listener: Result) {
-        CoroutineScope(Dispatchers.Default).launch {
+        CoroutineScope(singleThreadDispatcher).launch {
             requestsManager.accept(request, listener, mocks.keys.firstOrNull{it.startsWith(request.path)}.let { listOf(CategorisedMocks(Category.SPECIFIC, mocks[it] ?: emptyList())) })
         }.start()
     }

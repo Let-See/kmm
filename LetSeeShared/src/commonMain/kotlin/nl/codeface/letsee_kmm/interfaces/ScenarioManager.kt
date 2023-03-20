@@ -9,4 +9,5 @@ interface ScenarioManager {
     val activeScenario: Scenario?
     suspend fun activate(scenario: Scenario)
     suspend fun deactivateScenario()
+    suspend fun nextStep()
 }

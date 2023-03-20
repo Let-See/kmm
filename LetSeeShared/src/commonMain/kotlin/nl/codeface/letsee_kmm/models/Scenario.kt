@@ -22,7 +22,7 @@ data class Scenario (
     /**
      * Moves the cursor to the next mock, when the request received the current mock, this function should be called.
      */
-    fun nextStep(): Mock? {
+     fun nextStep(): Mock? {
         return if (currentIndex < mocks.size) {
             val mock = mocks[currentIndex]
             currentIndex++

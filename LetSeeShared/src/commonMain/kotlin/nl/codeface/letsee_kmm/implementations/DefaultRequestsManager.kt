@@ -3,6 +3,7 @@ package nl.codeface.letsee_kmm.implementations
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.yield
 import nl.codeface.letsee_kmm.CategorisedMocks
 import nl.codeface.letsee_kmm.RequestStatus
 import nl.codeface.letsee_kmm.Result
@@ -71,9 +72,8 @@ class DefaultRequestsManager(
      */
     private suspend fun respondUsingScenario(request: Request) {
          val mock = scenarioManager.activeScenario?.currentStep ?: return
-
         this.respond(request,  mock)
-        this.scenarioManager.activeScenario?.nextStep()
+        this.scenarioManager.nextStep()
         if(this.scenarioManager.activeScenario?.currentStep == null) {
             this.scenarioManager.deactivateScenario()
         }
@@ -86,6 +86,7 @@ class DefaultRequestsManager(
     - response: The mock response to use for the request.
      */
     private suspend fun respond(request: Request, withMockResponse: Mock) {
+        print(withMockResponse)
         when(withMockResponse) {
             is Mock.FAILURE -> {
                 this.respond(request, withResponse = withMockResponse.response)
