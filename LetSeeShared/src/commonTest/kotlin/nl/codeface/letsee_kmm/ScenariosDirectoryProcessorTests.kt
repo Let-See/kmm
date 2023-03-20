@@ -11,6 +11,8 @@ import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.ScenarioFileInformation
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class ScenariosDirectoryProcessorTests: BaseUnitTest() {
     private val defaultGlobalMockDirectoryConfiguration = DefaultGlobalMockDirectoryConfiguration(listOf(
@@ -18,7 +20,7 @@ class ScenariosDirectoryProcessorTests: BaseUnitTest() {
         DefaultGlobalMockDirectoryConfiguration.Map("/someOther","https://apple.com/api/v2")))
     private lateinit var sut: DefaultScenariosDirectoryProcessor
     private val fileNameCleaner = MockFileNameCleaner()
-    private val fileNameProcessor = MockFileNameProcessor(fileNameCleaner)
+    private val mockNameProcessor = MockFileNameProcessor(fileNameCleaner)
     private val directoryFileFetcher = MockDirectoryFilesFetcher()
     private val scenariosDirectoryProcessor = MockScenarioFileInformationProcessor()
     private var requestToMockMapper: (String)->List<Mock> = {
@@ -26,7 +28,7 @@ class ScenariosDirectoryProcessorTests: BaseUnitTest() {
     }
     @BeforeTest
     fun setUp() {
-        sut = DefaultScenariosDirectoryProcessor(directoryFileFetcher, fileNameProcessor, scenariosDirectoryProcessor, defaultGlobalMockDirectoryConfiguration) { requestToMockMapper(it) }
+        sut = DefaultScenariosDirectoryProcessor(directoryFileFetcher, mockNameProcessor, scenariosDirectoryProcessor, defaultGlobalMockDirectoryConfiguration) { requestToMockMapper(it) }
     }
 
     /*
@@ -39,35 +41,39 @@ class ScenariosDirectoryProcessorTests: BaseUnitTest() {
      */
     @Test
     fun `test process function should read the scenarios steps and map each step to the correct folder and obtain its mock`() {
-
+        // map the requested path to the mock objects
         this.requestToMockMapper = {
             listOf(
                 Mock.SUCCESS("Success_payment", M.Objects.SUCCESS_RESPONSE, M.Objects.SUCCESS_MOCK_INFORMATION),
                 Mock.FAILURE("Failure_payment", M.Objects.FAILURE_RESPONSE, M.Objects.FAILURE_MOCK_INFORMATION))
         }
         val filePath = M.Strings.PATH
+        // when processor asks for the files in the given folder, it'll receive these
         directoryFileFetcher.result = mapOf(Pair(filePath, listOf(M.Strings.IOS_SCENARIO_SUCCESS, M.Strings.IOS_SCENARIO_FAILURE)))
 
-        fileNameProcessor.result = listOf(
+        // when processor asks for cleaned file name in the scenario file to match that with the received mocks
+        mockNameProcessor.result = listOf(
             M.Objects.SUCCESS_MOCK_INFORMATION, M.Objects.FAILURE_MOCK_INFORMATION
         )
 
-        scenariosDirectoryProcessor.result = listOf(ScenarioFileInformation("SuccessPayment", listOf(
+        // when processor passes the retrieved files in the directory to map them to type safe objects will receive these
+        val scenarioNames = listOf("SuccessPayment", "FailurePayment")
+        scenariosDirectoryProcessor.result = listOf(ScenarioFileInformation(scenarioNames[0], listOf(
             ScenarioFileInformation.Step("arrangements", M.Objects.SUCCESS_MOCK_INFORMATION.displayName),
             ScenarioFileInformation.Step("arrangements", M.Objects.FAILURE_MOCK_INFORMATION.displayName))),
-            ScenarioFileInformation("FailurePayment", listOf(
-                ScenarioFileInformation.Step("arrangements", M.Objects.SUCCESS_MOCK_INFORMATION.displayName),
+            ScenarioFileInformation(scenarioNames[1], listOf(
+                ScenarioFileInformation.Step("arrangements", M.Objects.FAILURE_MOCK_INFORMATION.displayName),
                 ScenarioFileInformation.Step("arrangements", M.Objects.FAILURE_MOCK_INFORMATION.displayName)))
             )
 
         val result = sut.process(filePath)
-        val firstExpectedKey = defaultGlobalMockDirectoryConfiguration.maps.first().to + "/inside"
-//        assertEquals(3, result.size)
-//        assertEquals(firstExpectedKey, result.keys.first())
-//        assertNotNull( result[firstExpectedKey])
-//        assertEquals(3, result[firstExpectedKey]?.size)
-//        assertEquals(defaultGlobalMockDirectoryConfiguration.maps.first().to + "/inside/inside2", result.keys.drop(1).first())
-//        assertEquals(defaultGlobalMockDirectoryConfiguration.maps.drop(1).first().to + "/someother", result.keys.drop(2).first())
+        assertNotNull(result[result.keys.first()])
+        val scenarios = result[result.keys.first()]!!
+        assertEquals(2, scenarios.size)
+        val expectedList: List<Mock> = requestToMockMapper("")
+        assertEquals(expectedList, scenarios[0].mocks)
+        assertEquals(listOf(expectedList[1], expectedList[1]), scenarios[1].mocks)
+        assertEquals(scenarioNames, scenarios.map { it.name })
     }
 }
 

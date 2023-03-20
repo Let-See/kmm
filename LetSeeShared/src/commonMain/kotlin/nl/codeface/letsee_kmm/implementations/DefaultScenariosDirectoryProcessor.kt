@@ -8,7 +8,18 @@ import nl.codeface.letsee_kmm.interfaces.DirectoryProcessor
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
 import nl.codeface.letsee_kmm.interfaces.ScenarioFileInformationProcessor
 
-
+/**
+ * Builds scenario object for all of scenario files in the given folder
+ * Flow:
+ *  1.  Retrieves all the files in the given directory
+ *  2.  Decode those files to `ScenarioFileInformation` objects
+ *  3.  Goes through all scenarios and their steps and for each step
+ *      3.1 Looks up the folder name in the global config file and retrieves overridden address if it exists, and makes the Folder Key
+ *      3.2 Obtains all the mocks for that Key
+ *      3.3 Cleans the step's fileName property with the file name processor
+ *      3.4 Searches for the cleaned file name in the Mocks that have been obtained in the 3.2
+ *  4. Returns all the Scenario Objects
+ */
 class DefaultScenariosDirectoryProcessor(
     /// Retrieves all the files in the given folder
     private val directoryFilesFetcher: DirectoryFilesFetcher,
@@ -31,11 +42,11 @@ class DefaultScenariosDirectoryProcessor(
     private val scenarioFileNameToMockMapper: (String)->List<Mock>
 ) : DirectoryProcessor<Scenario> {
     override fun process(path: String): Map<String, List<Scenario>> {
-        val mocksInDirectory = directoryFilesFetcher.getFiles(path, this.scenarioFileType())
-        if (mocksInDirectory.isEmpty()){
+        val scenarioFilesInDirectory = directoryFilesFetcher.getFiles(path, this.scenarioFileType())
+        if (scenarioFilesInDirectory.isEmpty()){
             return emptyMap()
         }
-        val availableScenarios = mocksInDirectory[mocksInDirectory.keys.first()]?.let { it ->
+        val availableScenarios = scenarioFilesInDirectory[scenarioFilesInDirectory.keys.first()]?.let { it ->
             it.mapNotNull { filePath -> scenarioFileInformationProcessor.process(filePath).let { scenarioInformation ->
                 if (scenarioInformation == null) {
                     println("Could not parse scenario because of an issue in the $filePath")

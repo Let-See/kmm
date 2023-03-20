@@ -18,7 +18,7 @@ class MockMockProcessor(val fileNameProcessor: FileNameProcessor<MockFileInforma
         return  if (fileInformation?.status == MockFileInformation.MockStatus.SUCCESS ) {
              Mock.SUCCESS(name = "default value", response = DefaultResponse(200u,200u,null, null, null,
                 emptyMap()
-            ), fileInformation!!)
+            ), fileInformation)
         } else {
             Mock.CANCEL
         }
