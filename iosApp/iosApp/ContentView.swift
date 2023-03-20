@@ -1,31 +1,34 @@
 import SwiftUI
 import LetSeeShared
+class DefaultResult: LetSeeShared.Result {
+    func failure(error: Response) {
+        print("@@ error", error)
+    }
 
+    func success(response: Response) {
+        guard let data = response.byteResponse?.toData() else {return}
+        print("@@ success", String(data: data, encoding: .utf8))
+    }
+}
 struct ContentView: View {
     var body: some View {
         Text("greet")
             .onAppear(perform: {
 
                 let path = Bundle.main.url(forResource: "somejson", withExtension: "json")?.absoluteString
+                var letSee = DefaultLetSee.Companion.shared.letSee
+                letSee.setMocks(path: Bundle.main.bundlePath + "/Mocks")
+                letSee.setScenarios(path: Bundle.main.bundlePath + "/Scenarios")
 
-                let fileNameProcessor = JSONFileNameProcessor(cleaner: JSONFileNameCleaner())
-                //                print(GlobalMockDirectoryConfig.Companion().exists(inDirectory: Bundle.main.bundlePath + "/Mocks"))
-                let x = MocksDirectoryProcessor(fileNameProcessor: fileNameProcessor,
-                                                mockProcessor: DefaultMockProcessor(fileDataFetcher: DefaultFileFetcher()),
-                                                directoryFilesFetcher: DefaultDirectoryFilesFetcher(),
-                                                globalMockDirectoryConfig: nil)
+                if let scenario = letSee.scenarios.first {
+                    letSee.requestsManager.scenarioManager.activate(scenario: scenario) { _ in
 
-                var result = x.process(path: Bundle.main.bundlePath + "/Mocks")
-                print("@@",String(data: result.first!.value[0].response!.byteResponse!.toData(), encoding: .utf8))
-
-                let scenarios = DefaultScenariosDirectoryProcessor(directoryFilesFetcher: DefaultDirectoryFilesFetcher(), fileNameProcessor: fileNameProcessor,
-                                                                   scenarioFileInformationProcessor: DefaultScenarioFileInformation(),
-                                                                   globalMockDirectoryConfig: DefaultGlobalMockDirectoryConfiguration(maps: [.init(folder: "/arrangements", to: "/api/arrangement-manager/client-api/v2/productsummary/context")])) { i in
-                    DefaultRequestToMockMapper.transform(request: i, using: result) ?? []
+                    }
                 }
 
-                let scenarioResults = scenarios.process(path:  Bundle.main.bundlePath + "/Scenarios")
-                print(scenarioResults)
+                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
+                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
+                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
             })
     }
 

@@ -34,7 +34,7 @@ class DefaultScenariosDirectoryProcessor(
 
     /// Scenario Processor needs to have access to global folder mapper, as it needs to map the folder name in the scenario step
     /// to the correct address to be able to get all the mocks related to that folder and ultimately map the step to the correct mock
-    private val globalMockDirectoryConfig: GlobalMockDirectoryConfiguration? = null,
+    private val globalMockDirectoryConfig: (()->GlobalMockDirectoryConfiguration?)? = null,
 
     /// Each Scenario has one or more step, each step contains a folder name and a file. We need to map that look
     /// for that folder name in our mock and obtain it's mock, then processor searches the name of the file in the mocks
@@ -56,17 +56,20 @@ class DefaultScenariosDirectoryProcessor(
                 }
             } }
         }
+        val globalMockDirectoryConfig = globalMockDirectoryConfig?.let { it() }
         val scenarios = availableScenarios?.let {
             it.fold(mutableListOf<Scenario>()) { acc, current ->
                 val listOfScenarioMock = mutableListOf<Mock>()
                 current.steps.forEach { item ->
                     val normalizedFolderName = item.folder.mockKeyNormalised()
-                    val overriddenPath = globalMockDirectoryConfig?.hasMap(normalizedFolderName)?.to
+
+                    val overriddenPath = globalMockDirectoryConfig?.let {
+                        it.hasMap(normalizedFolderName)?.to
+                    }
                     val mockKey = if (overriddenPath != null)  overriddenPath + normalizedFolderName else normalizedFolderName
                     val mocks = scenarioFileNameToMockMapper(mockKey)
                     val fileName = fileNameProcessor.process("${item.folder}/${item.fileName.removeSuffix(".json")}.json")
                     val mock = mocks.firstOrNull { it.fileInformation?.displayName == fileName.displayName }
-                    println("@${fileName} @" + mocks.map { it.fileInformation?.rawPath })
                     mock?.let {
                         listOfScenarioMock.add(mock)
                     }

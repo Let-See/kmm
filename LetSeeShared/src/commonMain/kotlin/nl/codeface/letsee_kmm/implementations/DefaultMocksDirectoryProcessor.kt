@@ -7,11 +7,11 @@ import nl.codeface.letsee_kmm.interfaces.DirectoryProcessor
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
 import nl.codeface.letsee_kmm.interfaces.MockProcessor
 
-class MocksDirectoryProcessor(
+class DefaultMocksDirectoryProcessor(
     private val fileNameProcessor: FileNameProcessor<MockFileInformation>,
     private val mockProcessor: MockProcessor<MockFileInformation>,
     private val directoryFilesFetcher: DirectoryFilesFetcher,
-    private val globalMockDirectoryConfig: GlobalMockDirectoryConfiguration? = null,
+    private val globalMockDirectoryConfig: (()->GlobalMockDirectoryConfiguration?)? = null,
     ) : DirectoryProcessor<Mock> {
 
     override fun process(path: String): Map<String, List<Mock>> {
@@ -24,7 +24,7 @@ class MocksDirectoryProcessor(
         }
 
         val orderedItem = filesInformation.keys.sortedBy { it }.toMutableList()
-        val globalConfigs = globalMockDirectoryConfig ?: GlobalMockDirectoryConfiguration.exists(inDirectory = orderedItem.first())
+        val globalConfigs = globalMockDirectoryConfig?.let { it() } ?: GlobalMockDirectoryConfiguration.exists(inDirectory = orderedItem.first())
 
         // if globalConfigs is available it means that this folder should be the main folder and no file should be inside it,
         // so we can remove it from the results

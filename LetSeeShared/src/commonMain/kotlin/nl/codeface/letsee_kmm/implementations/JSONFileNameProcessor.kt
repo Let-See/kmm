@@ -9,7 +9,7 @@ class JSONFileNameProcessor(private val cleaner: FileNameCleaner): FileNameProce
         val fileName = cleaner.clean(filePath)
         val displayName = fileName.replaceFirstChar { it.uppercaseChar() }
         return MockFileInformation(filePath, statusCode = null, delay = null,
-            if(fileName.lowercase().startsWith("error")) MockFileInformation.MockStatus.FAILURE
+            if(fileName.lowercase().startsWith("error") || fileName.lowercase().startsWith("failure")) MockFileInformation.MockStatus.FAILURE
             else MockFileInformation.MockStatus.SUCCESS, displayName = displayName, relativePath = null)
     }
 }

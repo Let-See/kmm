@@ -12,7 +12,9 @@ data class DefaultGlobalMockDirectoryConfiguration(val maps: List<Map>): GlobalM
         }
     }
 
-   override fun hasMap(forRelativePth: String): Map? = this.maps.firstOrNull { forRelativePth.startsWith(it.folder) }
+   override fun hasMap(forRelativePth: String): Map? = this.maps.firstOrNull {
+       forRelativePth.startsWith(it.folder.mockKeyNormalised())
+   }
 }
 
 interface GlobalMockDirectoryConfiguration {

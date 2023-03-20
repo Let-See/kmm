@@ -5,7 +5,7 @@ import nl.codeface.letsee_kmm.MockImplementations.MockDirectoryFilesFetcher
 import nl.codeface.letsee_kmm.MockImplementations.MockFileNameCleaner
 import nl.codeface.letsee_kmm.MockImplementations.MockFileNameProcessor
 import nl.codeface.letsee_kmm.MockImplementations.MockMockProcessor
-import nl.codeface.letsee_kmm.implementations.MocksDirectoryProcessor
+import nl.codeface.letsee_kmm.implementations.DefaultMocksDirectoryProcessor
 import nl.codeface.letsee_kmm.implementations.DefaultGlobalMockDirectoryConfiguration
 import nl.codeface.letsee_kmm.implementations.GlobalMockDirectoryConfiguration
 import kotlin.test.AfterTest
@@ -17,14 +17,14 @@ import kotlin.test.assertNotNull
 class MocksDirectoryProcessorTests: BaseUnitTest() {
     private val defaultGlobalMockDirectoryConfiguration = DefaultGlobalMockDirectoryConfiguration(listOf(DefaultGlobalMockDirectoryConfiguration.Map("/inside","https://google.com/api/v2"),
          DefaultGlobalMockDirectoryConfiguration.Map("/someOther","https://apple.com/api/v2")))
-    private var sut: MocksDirectoryProcessor? = null
+    private var sut: DefaultMocksDirectoryProcessor? = null
     private val fileNameCleaner = MockFileNameCleaner()
     private val fileNameProcessor = MockFileNameProcessor(fileNameCleaner)
     private val directoryFileFetcher = MockDirectoryFilesFetcher()
     private val mockProcessing = MockMockProcessor(fileNameProcessor)
     @BeforeTest
     fun setUp() {
-        sut = MocksDirectoryProcessor(fileNameProcessor, mockProcessing, directoryFileFetcher, globalMockDirectoryConfig = defaultGlobalMockDirectoryConfiguration)
+        sut = DefaultMocksDirectoryProcessor(fileNameProcessor, mockProcessing, directoryFileFetcher, globalMockDirectoryConfig = defaultGlobalMockDirectoryConfiguration)
     }
 
     @AfterTest
