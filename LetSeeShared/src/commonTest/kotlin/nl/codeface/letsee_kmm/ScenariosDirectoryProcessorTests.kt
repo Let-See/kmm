@@ -4,22 +4,13 @@ import nl.codeface.letsee_kmm.MockImplementations.BaseUnitTest
 import nl.codeface.letsee_kmm.MockImplementations.MockDirectoryFilesFetcher
 import nl.codeface.letsee_kmm.MockImplementations.MockFileNameCleaner
 import nl.codeface.letsee_kmm.MockImplementations.MockFileNameProcessor
-import nl.codeface.letsee_kmm.MockImplementations.MockMockProcessor
 import nl.codeface.letsee_kmm.MockImplementations.MockScenarioFileInformationProcessor
 import nl.codeface.letsee_kmm.implementations.DefaultGlobalMockDirectoryConfiguration
-import nl.codeface.letsee_kmm.implementations.DefaultResponse
 import nl.codeface.letsee_kmm.implementations.DefaultScenariosDirectoryProcessor
-import nl.codeface.letsee_kmm.implementations.GlobalMockDirectoryConfiguration
-import nl.codeface.letsee_kmm.implementations.MocksDirectoryProcessor
-import nl.codeface.letsee_kmm.interfaces.DirectoryProcessor
-import nl.codeface.letsee_kmm.interfaces.Response
-import nl.codeface.letsee_kmm.interfaces.ScenarioFileInformationProcessor
+import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.ScenarioFileInformation
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class ScenariosDirectoryProcessorTests: BaseUnitTest() {
     private val defaultGlobalMockDirectoryConfiguration = DefaultGlobalMockDirectoryConfiguration(listOf(
@@ -50,7 +41,8 @@ class ScenariosDirectoryProcessorTests: BaseUnitTest() {
     fun `test process function should read the scenarios steps and map each step to the correct folder and obtain its mock`() {
 
         this.requestToMockMapper = {
-            listOf(Mock.SUCCESS("Success_payment", M.Objects.SUCCESS_RESPONSE, M.Objects.SUCCESS_MOCK_INFORMATION),
+            listOf(
+                Mock.SUCCESS("Success_payment", M.Objects.SUCCESS_RESPONSE, M.Objects.SUCCESS_MOCK_INFORMATION),
                 Mock.FAILURE("Failure_payment", M.Objects.FAILURE_RESPONSE, M.Objects.FAILURE_MOCK_INFORMATION))
         }
         val filePath = M.Strings.PATH

@@ -2,8 +2,7 @@ package nl.codeface.letsee_kmm
 
 import nl.codeface.letsee_kmm.MockImplementations.MockFileNameCleaner
 import nl.codeface.letsee_kmm.implementations.JSONFileNameProcessor
-import nl.codeface.letsee_kmm.implementations.JSONFileNameCleaner
-import kotlin.test.AfterTest
+import nl.codeface.letsee_kmm.models.MockFileInformation
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,7 +21,8 @@ class FileProcessorTest {
         val fileName = "some_22_someTestFileName.json"
         fileCleaner.result = fileName
         val result = sut.process(fileName)
-        val expected = MockFileInformation(fileName, null,null,MockFileInformation.MockStatus.SUCCESS, fileName, relativePath = "")
+        val expected = MockFileInformation(fileName, null,null,
+            MockFileInformation.MockStatus.SUCCESS, fileName, relativePath = "")
 
         assertEquals(expected.rawPath, result.rawPath)
     }
@@ -32,7 +32,8 @@ class FileProcessorTest {
         val fileName = "some_x_someTestFileName.json"
         fileCleaner.result = fileName.removeSuffix(".json")
         val result = sut.process(fileName)
-        val expected = MockFileInformation(fileName, null,null,MockFileInformation.MockStatus.SUCCESS, "Some_x_someTestFileName", relativePath = "")
+        val expected = MockFileInformation(fileName, null,null,
+            MockFileInformation.MockStatus.SUCCESS, "Some_x_someTestFileName", relativePath = "")
 
         assertEquals(expected.displayName, result.displayName)
     }

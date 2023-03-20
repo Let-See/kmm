@@ -1,7 +1,5 @@
 package nl.codeface.letsee_kmm.interfaces
 
-import nl.codeface.letsee_kmm.MockFileInformation
-
 /**
  * File Name Processor receives a file path, and extracts useful information out of the file name. The implementor specifies the type of information
  * for example we can have JSON file, Plist file and...

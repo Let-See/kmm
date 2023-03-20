@@ -1,6 +1,5 @@
 package nl.codeface.letsee_kmm.MockImplementations
 
-import nl.codeface.letsee_kmm.MockFileInformation
 import nl.codeface.letsee_kmm.interfaces.ScenarioFileInformationProcessor
 import nl.codeface.letsee_kmm.models.ScenarioFileInformation
 class MockScenarioFileInformationProcessor(var result: List<ScenarioFileInformation> = emptyList()): ScenarioFileInformationProcessor {

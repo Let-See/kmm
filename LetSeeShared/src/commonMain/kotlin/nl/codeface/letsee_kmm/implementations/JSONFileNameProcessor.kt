@@ -1,7 +1,7 @@
 package nl.codeface.letsee_kmm.implementations
 
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
-import nl.codeface.letsee_kmm.MockFileInformation
+import nl.codeface.letsee_kmm.models.MockFileInformation
 import nl.codeface.letsee_kmm.interfaces.FileNameCleaner
 
 class JSONFileNameProcessor(private val cleaner: FileNameCleaner): FileNameProcessor<MockFileInformation> {

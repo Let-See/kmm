@@ -3,6 +3,9 @@ package nl.codeface.letsee_kmm
 import kotlinx.coroutines.flow.StateFlow
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
 import nl.codeface.letsee_kmm.interfaces.Response
+import nl.codeface.letsee_kmm.models.Mock
+import nl.codeface.letsee_kmm.models.MockFileInformation
+import nl.codeface.letsee_kmm.models.Request
 
 interface Result {
     fun success(response: Response)

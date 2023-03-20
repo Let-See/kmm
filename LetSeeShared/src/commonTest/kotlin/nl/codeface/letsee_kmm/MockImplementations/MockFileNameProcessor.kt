@@ -1,7 +1,7 @@
 package nl.codeface.letsee_kmm.MockImplementations
 
 import nl.codeface.letsee_kmm.M
-import nl.codeface.letsee_kmm.MockFileInformation
+import nl.codeface.letsee_kmm.models.MockFileInformation
 import nl.codeface.letsee_kmm.interfaces.FileNameCleaner
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
 

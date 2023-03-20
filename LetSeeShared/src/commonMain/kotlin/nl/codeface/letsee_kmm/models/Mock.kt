@@ -1,4 +1,4 @@
-package nl.codeface.letsee_kmm
+package nl.codeface.letsee_kmm.models
 
 import nl.codeface.letsee_kmm.interfaces.Response
 
@@ -6,7 +6,7 @@ sealed class Mock(open val name: String, open val response: Response? = null, op
     class FAILURE(override val name: String, override val response: Response, override val fileInformation: MockFileInformation): Mock(name, response, fileInformation) {
         override fun equals(other: Any?): Boolean {
             return when (other) {
-                is Mock.FAILURE -> {
+                is FAILURE -> {
                     this.name == other.name &&
                             this.response == other.response &&
                             this.fileInformation == other.fileInformation
@@ -21,7 +21,7 @@ sealed class Mock(open val name: String, open val response: Response? = null, op
     class SUCCESS(override val name: String, override val response: Response, override val fileInformation: MockFileInformation): Mock(name, response, fileInformation) {
         override fun equals(other: Any?): Boolean {
             return when(other){
-                is Mock.SUCCESS -> {
+                is SUCCESS -> {
                     this.name == other.name &&
                     this.response == other.response &&
                     this.fileInformation == other.fileInformation
@@ -35,7 +35,7 @@ sealed class Mock(open val name: String, open val response: Response? = null, op
     class ERROR(override val name: String, val error: Throwable): Mock(name)  {
         override fun equals(other: Any?): Boolean {
             return when(other){
-                is Mock.ERROR -> {
+                is ERROR -> {
                     this.name == other.name &&
                             this.error == other.error
                 }
@@ -48,7 +48,7 @@ sealed class Mock(open val name: String, open val response: Response? = null, op
     object LIVE: Mock(name = "LIVE") {
         override fun equals(other: Any?): Boolean {
             return when (other) {
-                is Mock.LIVE -> {
+                is LIVE -> {
                     true
                 }
                 else -> {
@@ -60,7 +60,7 @@ sealed class Mock(open val name: String, open val response: Response? = null, op
     object CANCEL: Mock("CANCEL") {
         override fun equals(other: Any?): Boolean {
             return when (other) {
-                is Mock.CANCEL -> {
+                is CANCEL -> {
                     true
                 }
                 else -> {

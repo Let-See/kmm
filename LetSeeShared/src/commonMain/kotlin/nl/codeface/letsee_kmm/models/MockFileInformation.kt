@@ -1,4 +1,4 @@
-package nl.codeface.letsee_kmm
+package nl.codeface.letsee_kmm.models
 
 data class MockFileInformation(
     val rawPath: String,
