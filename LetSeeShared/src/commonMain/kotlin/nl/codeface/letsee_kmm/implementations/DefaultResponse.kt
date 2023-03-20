@@ -9,4 +9,9 @@ data class DefaultResponse(
     override val errorMessage: String?,
     override val statusText: String?,
     override var headers: Map<String, List<String>>
-) : Response
+) : Response {
+    companion object {
+        val CANCEL = DefaultResponse(400u, 400u,null,null,null, emptyMap())
+    }
+}
+

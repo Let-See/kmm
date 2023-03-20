@@ -2,6 +2,7 @@ package nl.codeface.letsee_kmm
 
 import kotlinx.coroutines.flow.StateFlow
 import nl.codeface.letsee_kmm.interfaces.FileNameProcessor
+import nl.codeface.letsee_kmm.interfaces.RequestsManager
 import nl.codeface.letsee_kmm.interfaces.Response
 import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.MockFileInformation
@@ -43,8 +44,6 @@ data class CategorisedMocks(
     val mocks: List<Mock>
 )
 
-data class AcceptedRequest(val request: Request, val response: Result, val status: RequestStatus, val mocks: List<CategorisedMocks>?)
-
 //class Interceptor(
 //    override val scenarioManager: ScenarioManaging,
 //    override val onRequestAccepted: StateFlow<Request>,
@@ -65,20 +64,6 @@ interface ScenarioManager {
     val scenario: StateFlow<Scenario?>
     fun activate(scenario: Scenario)
     fun deactivateScenario()
-}
-
-interface RequestsManager {
-    val scenarioManager: ScenarioManager
-    val requestsQueue: StateFlow<List<AcceptedRequest>>
-    val onRequestAccepted: StateFlow<Request>
-    val onRequestRemoved: StateFlow<Request>
-    fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?)
-    fun respond(request: Request, withResponse: Response)
-    fun respond(request: Request, withResult: Result)
-    fun respond(request: Request)
-    fun update(request: Request, status: RequestStatus)
-    fun cancel(request: Request)
-    fun finish(request: Request)
 }
 
 interface LetSeeProtocol {
