@@ -1,9 +1,15 @@
 package nl.codeface.letsee_kmm
 
+import nl.codeface.letsee_kmm.implementations.DefaultResponse
+import nl.codeface.letsee_kmm.interfaces.Response
+import kotlin.random.Random
+
 class M {
     class Strings {
         companion object {
             const val SUCCESS_FILE_NAME_EXPLICITLY: String = "success_some_2323112_23_file_name.json"
+            const val IOS_SCENARIO_SUCCESS: String = "success_payment.plist"
+            const val IOS_SCENARIO_FAILURE: String = "failure_payment.plist"
             const val SUCCESS_FILE_NAME_IMPLICITLY: String = "some_file_name_434_32.json"
             const val ERROR_FILE_NAME_IMPLICITLY: String = "error_some_32321ds_3_1_file_name.json"
             const val FAILURE_FILE_NAME_IMPLICITLY: String = "failure_some_333_file_name_2321_21_22.json"
@@ -41,6 +47,15 @@ class M {
                 Strings.SUCCESS_FILE_NAME_EXPLICITLY,
                 "${Strings.PATH}${Strings.SUCCESS_FILE_NAME_EXPLICITLY}"
             )
+
+            val SUCCESS_RESPONSE: Response = SUCCESS_MOCK_INFORMATION_ALL_PROPERTIES.mapToResponse()
+            val FAILURE_RESPONSE: Response = FAILURE_MOCK_INFORMATION.mapToResponse()
         }
     }
+}
+
+fun MockFileInformation.mapToResponse(): Response {
+    val fileInformation = this
+    val statusCode = fileInformation.statusCode ?: if(fileInformation.status == MockFileInformation.MockStatus.SUCCESS) 200u else 400u
+    return DefaultResponse(statusCode,statusCode,null,null,null, emptyMap())
 }

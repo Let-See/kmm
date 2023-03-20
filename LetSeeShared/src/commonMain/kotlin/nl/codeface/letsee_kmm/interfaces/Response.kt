@@ -1,5 +1,6 @@
 package nl.codeface.letsee_kmm.interfaces
 
+
 interface Response {
     val responseCode: UInt
     val requestCode: UInt

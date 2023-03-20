@@ -1,6 +1,9 @@
 package nl.codeface.letsee_kmm.interfaces
 
+/**
+ * Travers the given directory and it's sub directories and retrieves the files path. It filters the result based on the given fileType properties
+ * The main Idea is to delegate the file gathering to the platform and hide the implementation of that in each specific platform separately
+ */
 interface DirectoryFilesFetcher {
-    /// travers directory and it's children and returns all files
     fun getFiles(path: String, fileType: String): Map<String, List<String>>
 }

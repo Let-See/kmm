@@ -34,7 +34,7 @@ class MocksDirectoryProcessor(
 
         orderedItem.forEach { key ->
             val filesInsideDirectory = filesInformation[key] ?: return emptyMap()
-            val relativePath = this.makeRelativePath(forPath = key, relativeTo = path)
+            val relativePath = this.makeRelativePath(forPath = key, relativeTo = path).mockKeyNormalised()
             val overriddenPath: String? = globalConfigs?.hasMap(forRelativePth = relativePath)?.to
             val fileInformation: List<MockFileInformation> = filesInsideDirectory.map { file ->
                     val relativePath = this.makeRelativePath(
@@ -57,3 +57,9 @@ class MocksDirectoryProcessor(
     }
 }
 
+fun String.mockKeyNormalised(): String {
+    var folder = this.lowercase()
+    folder = if (folder.startsWith("/")) folder else "/$folder"
+    folder = if (folder.endsWith("/"))  folder else "$folder/"
+    return folder
+}
