@@ -9,7 +9,9 @@ import nl.codeface.letsee_kmm.implementations.DefaultResponse
 import nl.codeface.letsee_kmm.implementations.AcceptedRequest
 import nl.codeface.letsee_kmm.implementations.DefaultRequestsManager
 import nl.codeface.letsee_kmm.interfaces.Response
+import nl.codeface.letsee_kmm.interfaces.Result
 import nl.codeface.letsee_kmm.models.DefaultRequest
+import nl.codeface.letsee_kmm.models.RequestStatus
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
