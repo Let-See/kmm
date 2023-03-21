@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>steps</key>
+	<array>
+		<dict>
+			<key>folder</key>
+			<string>arrangements</string>
+			<key>fileName</key>
+			<string>success</string>
+		</dict>
+		<dict>
+			<key>folder</key>
+			<string>arrangements</string>
+			<key>fileName</key>
+			<string>success</string>
+		</dict>
+		<dict>
+			<key>folder</key>
+			<string>arrangements</string>
+			<key>fileName</key>
+			<string>failure</string>
+		</dict>
+	</array>
+</dict>
+</plist>

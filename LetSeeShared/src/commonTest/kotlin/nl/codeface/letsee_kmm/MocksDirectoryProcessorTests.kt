@@ -24,7 +24,7 @@ class MocksDirectoryProcessorTests: BaseUnitTest() {
     private val mockProcessing = MockMockProcessor(fileNameProcessor)
     @BeforeTest
     fun setUp() {
-        sut = DefaultMocksDirectoryProcessor(fileNameProcessor, mockProcessing, directoryFileFetcher, globalMockDirectoryConfig = defaultGlobalMockDirectoryConfiguration)
+        sut = DefaultMocksDirectoryProcessor(fileNameProcessor, mockProcessing, directoryFileFetcher, globalMockDirectoryConfig = { defaultGlobalMockDirectoryConfiguration })
     }
 
     @AfterTest

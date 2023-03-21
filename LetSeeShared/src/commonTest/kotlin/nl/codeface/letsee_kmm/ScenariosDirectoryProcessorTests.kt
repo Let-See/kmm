@@ -28,7 +28,8 @@ class ScenariosDirectoryProcessorTests: BaseUnitTest() {
     }
     @BeforeTest
     fun setUp() {
-        sut = DefaultScenariosDirectoryProcessor(directoryFileFetcher, mockNameProcessor, scenariosDirectoryProcessor, defaultGlobalMockDirectoryConfiguration) { requestToMockMapper(it) }
+        sut = DefaultScenariosDirectoryProcessor(directoryFileFetcher, mockNameProcessor, scenariosDirectoryProcessor,
+            { defaultGlobalMockDirectoryConfiguration }) { requestToMockMapper(it) }
     }
 
     /*

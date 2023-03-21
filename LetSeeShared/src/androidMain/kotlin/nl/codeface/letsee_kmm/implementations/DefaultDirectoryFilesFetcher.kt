@@ -8,10 +8,6 @@ actual class DefaultDirectoryFilesFetcher: DirectoryFilesFetcher {
         val result = mutableMapOf<String, MutableList<String>>()
         val root = File(path)
 
-        if (!root.isDirectory) {
-            return emptyMap()
-        }
-
         for (file in root.walkTopDown()) {
             if (file.isFile && file.extension == fileType) {
                 val dir = file.parentFile?.toString()?.let { dir ->
