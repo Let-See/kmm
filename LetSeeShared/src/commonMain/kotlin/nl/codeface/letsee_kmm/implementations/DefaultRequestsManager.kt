@@ -55,7 +55,7 @@ class DefaultRequestsManager(
         TODO("Not yet implemented")
     }
     private fun indexOf(request: Request): Int? {
-         return currentStack.indexOfFirst { it.request == request }.let {index ->
+         return currentStack.indexOfFirst { it.request.id == request.id }.let {index ->
              if(index>=0) {
                  index
              } else {
@@ -70,12 +70,10 @@ class DefaultRequestsManager(
     - request: The request to be responded to.
      */
     private suspend fun respondUsingScenario(request: Request) {
-         val mock = scenarioManager.activeScenario?.currentStep ?: return
-        this.respond(request,  mock)
-        this.scenarioManager.nextStep()
-        if(this.scenarioManager.activeScenario?.currentStep == null) {
-            this.scenarioManager.deactivateScenario()
-        }
+        scenarioManager.activeScenario.value?.currentStep?.let {
+            this.respond(request,  it)
+            this.scenarioManager.nextStep()
+        } ?: scenarioManager.deactivateScenario()
     }
 
     /**
@@ -84,8 +82,7 @@ class DefaultRequestsManager(
     - request: The URL request to be responded to.
     - response: The mock response to use for the request.
      */
-    private suspend fun respond(request: Request, withMockResponse: Mock) {
-        print(withMockResponse)
+    override suspend fun respond(request: Request, withMockResponse: Mock) {
         when(withMockResponse) {
             is Mock.FAILURE -> {
                 this.respond(request, withResponse = withMockResponse.response)
@@ -97,7 +94,7 @@ class DefaultRequestsManager(
             is Mock.LIVE -> this.respond(request)
             is Mock.ERROR -> this.cancel(request)
         }
-
+        finish(request)
     }
     override suspend fun update(request: Request, status: RequestStatus) {
         indexOf(request)?.let {

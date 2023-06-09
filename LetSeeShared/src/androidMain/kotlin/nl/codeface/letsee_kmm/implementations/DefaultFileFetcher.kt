@@ -9,10 +9,16 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.Exception
 
-actual class DefaultFileFetcher: FileDataFetcher {
+actual class DefaultFileFetcher : FileDataFetcher {
     actual override fun getFileData(filePath: String): ByteArray? {
         try {
-            return File(filePath).readBytes()
+           return androidContext?.assets?.open(filePath)?.use { inputStream ->
+                val length = inputStream.available()
+                val bytes = ByteArray(length)
+                inputStream.read(bytes)
+               bytes
+            }
+//            return File(filePath).readBytes()
         } catch (e: Exception) {
             when(e) {
                 is FileNotFoundException -> {

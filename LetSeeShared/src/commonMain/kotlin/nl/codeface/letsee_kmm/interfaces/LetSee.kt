@@ -1,11 +1,13 @@
 package nl.codeface.letsee_kmm.interfaces
 
+import kotlinx.coroutines.flow.StateFlow
 import nl.codeface.letsee_kmm.Configuration
 import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.Request
 import nl.codeface.letsee_kmm.models.Scenario
 
 interface LetSee {
+    val config: StateFlow<Configuration>
     /**
      * All available mocks that LetSee have found on the given mock directory
      */
@@ -19,7 +21,7 @@ interface LetSee {
      *
      * @param config the `Configuration` to be used by LetSee.
      */
-    fun setConfig(config: Configuration)
+    fun setConfigurations(config: Configuration)
     /**
      * Adds mock files from the given path to LetSee.
      *
@@ -49,4 +51,6 @@ interface LetSee {
      * @return The data task that would be run.
      */
     fun addRequest(request: Request, listener: Result)
+
+    val requestsManager: RequestsManager
 }

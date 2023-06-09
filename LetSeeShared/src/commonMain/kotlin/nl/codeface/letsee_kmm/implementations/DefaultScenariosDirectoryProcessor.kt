@@ -74,7 +74,7 @@ class DefaultScenariosDirectoryProcessor(
                         listOfScenarioMock.add(mock)
                     }
                 }
-                acc.add(Scenario(current.displayName, listOfScenarioMock))
+                acc.add(Scenario(current.displayName ?: "", listOfScenarioMock))
                 acc
             }
         }

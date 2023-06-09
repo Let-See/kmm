@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import nl.codeface.letsee_kmm.models.CategorisedMocks
 import nl.codeface.letsee_kmm.models.RequestStatus
 import nl.codeface.letsee_kmm.implementations.AcceptedRequest
+import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.Request
 
 /**
@@ -17,6 +18,7 @@ interface RequestsManager {
     val onRequestRemoved:  ((Request) -> Unit)?
     suspend fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?)
     suspend fun respond(request: Request, withResponse: Response)
+    suspend fun respond(request: Request, withMockResponse: Mock)
     suspend fun respond(request: Request)
     suspend fun update(request: Request, status: RequestStatus)
     suspend fun cancel(request: Request)

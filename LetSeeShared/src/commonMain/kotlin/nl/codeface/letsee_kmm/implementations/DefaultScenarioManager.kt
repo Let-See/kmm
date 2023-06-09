@@ -1,23 +1,21 @@
 package nl.codeface.letsee_kmm.implementations
 
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import nl.codeface.letsee_kmm.interfaces.ScenarioManager
+import nl.codeface.letsee_kmm.models.Mock
 import nl.codeface.letsee_kmm.models.Scenario
 
 class DefaultScenarioManager : ScenarioManager {
-    override val scenario: SharedFlow<Scenario?>
-        get() = _activeScenario.asSharedFlow()
 
-    private var _activeScenario = run {
-        val flow = MutableSharedFlow<Scenario?>(replay = 1)
-        flow.tryEmit(null)
-        flow
-    }
-    override val activeScenario: Scenario?
-        get() = _activeScenario.replayCache.first()
+    private var _activeScenario: MutableStateFlow<Scenario?> = MutableStateFlow(null)
+    override val activeScenario: StateFlow<Scenario?>
+        get() = _activeScenario
+
     override suspend fun activate(scenario: Scenario) {
+        if (scenario.mocks.isEmpty()) return
         _activeScenario.emit(scenario)
     }
 
@@ -26,15 +24,29 @@ class DefaultScenarioManager : ScenarioManager {
     }
 
     override suspend fun nextStep() {
-        val activeScenario = activeScenario ?: return
-        activeScenario.nextStep()
-        _activeScenario.emit(activeScenario)
+        val activeScenario = activeScenario.value ?: return
+        if (activeScenario.currentIndex + 1 < activeScenario.mocks.size) {
+            _activeScenario.emit(nextStep(activeScenario))
+        } else {
+            deactivateScenario()
+        }
+    }
+
+    /**
+     * Moves the cursor to the next mock, when the request received the current mock, this function should be called.
+     */
+    private fun nextStep(scenario: Scenario): Scenario? {
+        return if (scenario.currentIndex < scenario.mocks.size) {
+            scenario.copy(currentIndex = scenario.currentIndex + 1 )
+        } else {
+            return null
+        }
     }
 
     /**
     The `isScenarioActive` property gets a boolean value indicating whether there is a scenario active or not.
      */
     override val isScenarioActive: Boolean
-        get() = activeScenario?.currentStep != null
+        get() = activeScenario.value != null
 
 }

@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization") version "1.8.10"
+    `maven-publish`
 }
 
 kotlin {
@@ -40,7 +41,6 @@ kotlin {
             }
         }
         val androidMain by getting
-        val androidUnitTest by getting
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -66,7 +66,7 @@ android {
     namespace = "nl.codeface.letsee_kmm"
     compileSdk = 33
     defaultConfig {
-        minSdk = 24
+        minSdk = 23
         targetSdk = 33
     }
 }

@@ -3,6 +3,8 @@ package nl.codeface.letsee_kmm
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import nl.codeface.letsee_kmm.models.CategorisedMocks
 import nl.codeface.letsee_kmm.models.Category
@@ -49,8 +51,8 @@ class DefaultLetSee(
         fileNameProcessor, mockProcessor, directoryFilesFetcher
     ) { globalMockDirectoryConfig },
     private var scenariosDirectoryProcessor: DirectoryProcessor<Scenario>? = null,
-    private var config: Configuration = Configuration.default,
-    val requestsManager: RequestsManager = DefaultRequestsManager()
+    private var _config: MutableStateFlow<Configuration> = MutableStateFlow(Configuration.default),
+    override val requestsManager: RequestsManager = DefaultRequestsManager()
     ): LetSee {
     private val scenarioFileNameToMockMapper: (String)->List<Mock> = {
         this.mocks[it] ?: emptyList()
@@ -63,11 +65,16 @@ class DefaultLetSee(
             scenarioFileNameToMockMapper
         )
     }
-    override fun setConfig(config: Configuration) {
-        this.config = config
+    override val config: StateFlow<Configuration>
+        get() = _config
+
+    override fun setConfigurations(config: Configuration) {
+        this._config.value = config
     }
+
     override var scenarios: List<Scenario> = listOf()
         private set
+
     override fun setMocks(path: String) {
         globalMockDirectoryConfig = GlobalMockDirectoryConfiguration.exists(inDirectory = path)
         mocks = mocksDirectoryProcessor.process(path)

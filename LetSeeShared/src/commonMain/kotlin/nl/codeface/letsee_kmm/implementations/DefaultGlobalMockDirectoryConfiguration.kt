@@ -20,7 +20,7 @@ data class DefaultGlobalMockDirectoryConfiguration(val maps: List<Map>): GlobalM
 interface GlobalMockDirectoryConfiguration {
     fun hasMap(forRelativePth: String): DefaultGlobalMockDirectoryConfiguration.Map?
     companion object {
-        const val GLOBAL_CONFIG_FILE_NAME = ".ls.global.json"
+        const val GLOBAL_CONFIG_FILE_NAME = "ls.global.json"
     }
 }
 
