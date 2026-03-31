@@ -20,10 +20,15 @@ import io.github.letsee.models.MockFileInformation
 import io.github.letsee.models.Request
 import io.github.letsee.models.RequestStatus
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,7 +51,7 @@ class CapturingRequestsManager : RequestsManager {
     }
 
     suspend fun awaitAccept(): List<CategorisedMocks>? {
-        return withTimeout(2000) { _deferred.await() }
+        return withContext(Dispatchers.Default) { withTimeout(2000) { _deferred.await() } }
     }
 
     override suspend fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?) {
@@ -90,7 +95,7 @@ class DefaultLetSeeTest {
         DefaultLetSee(requestsManager = capturingManager, mocks = mocks)
 
     @Test
-    fun `exact path match`() = runBlocking {
+    fun `exact path match`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users/")
         sut.addRequest(request, MockResult())
@@ -99,7 +104,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `case insensitive match`() = runBlocking {
+    fun `case insensitive match`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/API/Users/")
         sut.addRequest(request, MockResult())
@@ -108,7 +113,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `trailing slash normalization`() = runBlocking {
+    fun `trailing slash normalization`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users")
         sut.addRequest(request, MockResult())
@@ -117,7 +122,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `leading slash normalization`() = runBlocking {
+    fun `leading slash normalization`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "api/users/")
         sut.addRequest(request, MockResult())
@@ -126,7 +131,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `no false prefix match`() = runBlocking {
+    fun `no false prefix match`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users-admin/")
         sut.addRequest(request, MockResult())
@@ -136,7 +141,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `query parameters are stripped before matching`() = runBlocking {
+    fun `query parameters are stripped before matching`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users?page=1")
         sut.addRequest(request, MockResult())
@@ -146,7 +151,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `unknown path returns empty mocks list`() = runBlocking {
+    fun `unknown path returns empty mocks list`() = runTest {
         val sut = letSeeWith(mapOf(usersKey to usersMocks))
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/orders/")
         sut.addRequest(request, MockResult())
@@ -155,7 +160,7 @@ class DefaultLetSeeTest {
     }
 
     @Test
-    fun `addRequest finds mocks when keys produced by processor normalization`() = runBlocking {
+    fun `addRequest finds mocks when keys produced by processor normalization`() = runTest {
         val rootPath = "/mocks/"
         val usersDirPath = "${rootPath}api/Users/"
         val mockInfo = MockFileInformation(
@@ -194,4 +199,84 @@ class DefaultLetSeeTest {
             "addRequest normalization must agree with processor key format")
         assertEquals("success_200.json", received?.first()?.mocks?.first()?.name)
     }
+
+    @Test
+    fun `stress test - 50 concurrent addRequest calls all complete without crashes`() = runTest {
+        val countingManager = CountingRequestsManager(expected = 50)
+        val sut = DefaultLetSee(requestsManager = countingManager, mocks = mapOf(usersKey to usersMocks))
+        repeat(50) {
+            sut.addRequest(
+                DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users/"),
+                MockResult()
+            )
+        }
+        countingManager.awaitAll()
+        assertEquals(50, countingManager.acceptedCount)
+    }
+
+    @Test
+    fun `exception in addRequest coroutine is captured by handler and does not crash`() = runTest {
+        val capturedThrowable = CompletableDeferred<Throwable>()
+        val throwingManager = ThrowingRequestsManager()
+        val sut = DefaultLetSee(
+            requestsManager = throwingManager,
+            mocks = mapOf(usersKey to usersMocks),
+            onCoroutineError = { capturedThrowable.complete(it) }
+        )
+        sut.addRequest(
+            DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users/"),
+            MockResult()
+        )
+        val exception = withContext(Dispatchers.Default) { withTimeout(2000) { capturedThrowable.await() } }
+        assertTrue(exception is IllegalStateException,
+            "Expected IllegalStateException but got ${exception::class.simpleName}")
+        assertEquals("Simulated failure in accept", exception.message)
+    }
+}
+
+/** Counts how many times [accept] is called; used in the concurrent stress test. */
+class CountingRequestsManager(private val expected: Int) : RequestsManager {
+    private val _count = MutableStateFlow(0)
+    val acceptedCount: Int get() = _count.value
+
+    override val onRequestAccepted: ((Request) -> Unit)? = null
+    override val onRequestRemoved: ((Request) -> Unit)? = null
+    override val scenarioManager: ScenarioManager = DefaultScenarioManager()
+    private val _requestsStack = MutableSharedFlow<List<AcceptedRequest>>(replay = 1)
+    override val requestsStack: SharedFlow<List<AcceptedRequest>> = _requestsStack.asSharedFlow()
+
+    override suspend fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?) {
+        _count.update { it + 1 }
+    }
+
+    suspend fun awaitAll(): Unit = withContext(Dispatchers.Default) {
+        withTimeout(5000) { _count.first { it >= expected } }
+    }
+
+    override suspend fun respond(request: Request, withResponse: Response) {}
+    override suspend fun respond(request: Request, withMockResponse: Mock) {}
+    override suspend fun respond(request: Request) {}
+    override suspend fun update(request: Request, status: RequestStatus) {}
+    override suspend fun cancel(request: Request) {}
+    override suspend fun finish(request: Request) {}
+}
+
+/** Always throws [IllegalStateException] inside [accept]; used to verify exception handling. */
+class ThrowingRequestsManager : RequestsManager {
+    override val onRequestAccepted: ((Request) -> Unit)? = null
+    override val onRequestRemoved: ((Request) -> Unit)? = null
+    override val scenarioManager: ScenarioManager = DefaultScenarioManager()
+    private val _requestsStack = MutableSharedFlow<List<AcceptedRequest>>(replay = 1)
+    override val requestsStack: SharedFlow<List<AcceptedRequest>> = _requestsStack.asSharedFlow()
+
+    override suspend fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?) {
+        throw IllegalStateException("Simulated failure in accept")
+    }
+
+    override suspend fun respond(request: Request, withResponse: Response) {}
+    override suspend fun respond(request: Request, withMockResponse: Mock) {}
+    override suspend fun respond(request: Request) {}
+    override suspend fun update(request: Request, status: RequestStatus) {}
+    override suspend fun cancel(request: Request) {}
+    override suspend fun finish(request: Request) {}
 }

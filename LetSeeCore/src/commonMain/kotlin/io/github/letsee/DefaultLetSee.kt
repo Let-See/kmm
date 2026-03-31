@@ -1,8 +1,12 @@
 package io.github.letsee
 
+import kotlin.concurrent.Volatile
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -46,14 +50,15 @@ class DefaultLetSee(
     ),
     private val directoryFilesFetcher: DirectoryFilesFetcher = DefaultDirectoryFilesFetcher(),
     private var globalMockDirectoryConfig: GlobalMockDirectoryConfiguration? = null,
-    override var mocks: Map<String, List<Mock>> = mapOf(),
+    @Volatile override var mocks: Map<String, List<Mock>> = mapOf(),
     private val scenarioFileInformationProcessor: ScenarioFileInformationProcessor = DefaultScenarioFileInformation(),
     private val mocksDirectoryProcessor: DirectoryProcessor<Mock> = DefaultMocksDirectoryProcessor(
         fileNameProcessor, mockProcessor, directoryFilesFetcher
     ) { globalMockDirectoryConfig },
     private var scenariosDirectoryProcessor: DirectoryProcessor<Scenario>? = null,
     private var _config: MutableStateFlow<Configuration> = MutableStateFlow(Configuration.default),
-    override val requestsManager: RequestsManager = DefaultRequestsManager()
+    override val requestsManager: RequestsManager = DefaultRequestsManager(),
+    private val onCoroutineError: (Throwable) -> Unit = { println("[DefaultLetSee] Coroutine exception: ${it.stackTraceToString()}") }
     ): LetSee {
     private val scenarioFileNameToMockMapper: (String)->List<Mock> = {
         this.mocks[it] ?: emptyList()
@@ -76,10 +81,35 @@ class DefaultLetSee(
     override var scenarios: List<Scenario> = listOf()
         private set
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val singleThreadDispatcher = Dispatchers.Default.limitedParallelism(1)
+
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        onCoroutineError(throwable)
+    }
+
+    // SupervisorJob prevents one failed child coroutine from cancelling siblings.
+    // addRequest reads and setMocks writes are confined to this single-threaded scope.
+    // The public getter is protected by @Volatile for cross-thread visibility.
+    // Note: the listener (Result) is not notified if requestsManager.accept throws —
+    // the exception routes to onCoroutineError. Full listener error reporting requires
+    // an error-Response factory (deferred).
+    private val scope = CoroutineScope(SupervisorJob() + singleThreadDispatcher + exceptionHandler)
+
+    /** Cancels the coroutine scope when this instance is no longer needed. */
+    fun close() {
+        scope.cancel()
+    }
+
+    // setMocks is asynchronous: the mocks map is populated after this method returns.
+    // Call during app initialization, before addRequest. The @Volatile backing field
+    // ensures memory visibility for concurrent reads from the public getter.
     override fun setMocks(path: String) {
         globalMockDirectoryConfig = GlobalMockDirectoryConfiguration.exists(inDirectory = path)
-        mocks = mocksDirectoryProcessor.process(path)
+        val newMocks = mocksDirectoryProcessor.process(path)
+        scope.launch { mocks = newMocks }
     }
+
     override fun setScenarios(path: String) {
         val result = scenariosDirectoryProcessor?.process(path)
         result?.keys?.firstOrNull()?.let {
@@ -89,11 +119,8 @@ class DefaultLetSee(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val singleThreadDispatcher = Dispatchers.Default.limitedParallelism(1)
-
     override fun addRequest(request: Request, listener: Result) {
-        CoroutineScope(singleThreadDispatcher).launch {
+        scope.launch {
             val normalizedPath = request.path
                 .substringBefore("?")
                 .split("/")
@@ -103,7 +130,7 @@ class DefaultLetSee(
             requestsManager.accept(request, listener, listOf(
                 CategorisedMocks(Category.SPECIFIC, mocks[normalizedPath] ?: emptyList())
             ))
-        }.start()
+        }
     }
 
     companion object {

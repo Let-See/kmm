@@ -1,9 +1,9 @@
 plugins {
-    kotlin("multiplatform")
-    id("com.android.library")
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
     id("convention.publication")
-    id("co.touchlab.skie") version "0.10.10"
+    // SKIE disabled: 0.10.10 does not support Kotlin 2.3.20. Re-enable via: alias(libs.plugins.skie)
 }
 
 kotlin {
@@ -28,16 +28,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
@@ -45,13 +43,9 @@ kotlin {
 
 android {
     namespace = "io.github.letsee"
-    compileSdk = 36
+    compileSdk = libs.versions.compileSdk.get().toInt()
     defaultConfig {
         minSdk = 23
     }
 }
 
-// SKIE 0.10.10 does not support Kotlin 2.3.20; disable until a compatible version is released.
-skie {
-    isEnabled = false
-}

@@ -7,12 +7,13 @@ import io.github.letsee.interfaces.Result
 import io.github.letsee.models.DefaultRequest
 import io.github.letsee.models.Mock
 import io.github.letsee.models.MockFileInformation
+import io.github.letsee.models.Request
 import io.github.letsee.models.RequestStatus
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -36,7 +37,7 @@ class DefaultRequestsManagerTest {
     }
 
     @Test
-    fun testAccept() = runBlocking {
+    fun testAccept() = runTest {
         val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/arrangements")
         sut.accept(givenRequest,
             MockResult(), null
@@ -52,7 +53,7 @@ class DefaultRequestsManagerTest {
     }
 
     @Test
-    fun testRespond() = runBlocking {
+    fun testRespond() = runTest {
         val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/arrangements")
 
         val requestsStackStatsResult :MutableList<List<AcceptedRequest>> = mutableListOf()
@@ -74,31 +75,124 @@ class DefaultRequestsManagerTest {
     }
 
     @Test
-    fun testUpdate() {
+    fun testUpdate() = runTest {
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/test")
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            sut.requestsStack
+                .take(3) // init [] → accept [r(IDLE)] → update [r(LOADING)]
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        sut.accept(givenRequest, MockResult(), null)
+        sut.update(givenRequest, RequestStatus.LOADING)
+
+        collectorJob.join()
+
+        assertEquals(3, stackStates.size)
+        assertEquals(RequestStatus.LOADING, stackStates.last().first().status)
     }
 
     @Test
-    fun testCancel() {
+    fun testCancel() = runTest {
+        var removeCount = 0
+        val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/test")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            trackingSut.requestsStack
+                .take(4) // init [] → accept [r(IDLE)] → cancel updates [r(LOADING)] → cancel removes []
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.cancel(givenRequest)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount, "onRequestRemoved should fire once for cancel")
+        assertEquals(emptyList(), stackStates.last(), "stack should be empty after cancel")
     }
 
     @Test
-    fun testFinish() {
+    fun testFinish() = runTest {
+        var removeCount = 0
+        val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/test")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            trackingSut.requestsStack
+                .take(3) // init [] → accept [r(IDLE)] → finish []
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.finish(givenRequest)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount, "onRequestRemoved should fire once for finish")
+        assertEquals(emptyList(), stackStates.last(), "stack should be empty after finish")
     }
 
     @Test
-    fun testGetRequestsStack() {
+    fun testGetRequestsStack() = runTest {
+        val r1 = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/r1")
+        val r2 = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/r2")
+        val r3 = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/r3")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            sut.requestsStack
+                .take(4) // init [] → [r1] → [r1,r2] → [r1,r2,r3]
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        sut.accept(r1, MockResult(), null)
+        sut.accept(r2, MockResult(), null)
+        sut.accept(r3, MockResult(), null)
+
+        collectorJob.join()
+
+        assertEquals(3, stackStates.last().size)
+        assertEquals(r1, stackStates.last()[0].request)
+        assertEquals(r2, stackStates.last()[1].request)
+        assertEquals(r3, stackStates.last()[2].request)
     }
 
     @Test
-    fun testGetOnRequestAccepted() {
+    fun testGetOnRequestAccepted() = runTest {
+        val capturedRequests: MutableList<Request> = mutableListOf()
+        val trackingSut = DefaultRequestsManager(onRequestAccepted = { capturedRequests.add(it) })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/test")
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+
+        assertEquals(1, capturedRequests.size)
+        assertEquals(givenRequest, capturedRequests.first())
     }
 
     @Test
-    fun testGetOnRequestRemoved() {
+    fun testGetOnRequestRemoved() = runTest {
+        val capturedRequests: MutableList<Request> = mutableListOf()
+        val trackingSut = DefaultRequestsManager(onRequestRemoved = { capturedRequests.add(it) })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://google.com", path = "/v1/test")
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.finish(givenRequest)
+
+        assertEquals(1, capturedRequests.size)
+        assertEquals(givenRequest, capturedRequests.first())
     }
 
     @Test
-    fun `respond with mock removes request from stack exactly once`() = runBlocking {
+    fun `respond with mock removes request from stack exactly once`() = runTest {
         var removeCount = 0
         val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
         val givenRequest = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/test")
@@ -135,7 +229,7 @@ class DefaultRequestsManagerTest {
     }
 
     @Test
-    fun `respond with mock does not double-finish - sentinel request survives`() = runBlocking {
+    fun `respond with mock does not double-finish - sentinel request survives`() = runTest {
         var removeCount = 0
         val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
         val givenRequest = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/test")

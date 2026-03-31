@@ -1,16 +1,16 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    kotlin("plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "nl.codeface.letsee_kmm.android"
-    compileSdk = 36
+    compileSdk = libs.versions.compileSdk.get().toInt()
     defaultConfig {
         applicationId = "nl.codeface.letsee_kmm.android"
-        minSdk = 24
-        targetSdk = 36
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
@@ -43,13 +43,13 @@ kotlin {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.03.00")
+    val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(project(":LetSeeCore"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.tooling)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material)
+    implementation(libs.activity.compose)
 }

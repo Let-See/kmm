@@ -87,8 +87,12 @@ publishing {
     }
 }
 
-// Signing artifacts. Signing.* extra properties values will be used
-
+// Signing artifacts. Only sign when all credentials are present (guards CI/local builds without keys).
 signing {
-    sign(publishing.publications)
+    val keyId = findProperty("signing.keyId") as? String
+    val password = findProperty("signing.password") as? String
+    val ringFile = findProperty("signing.secretKeyRingFile") as? String
+    if (listOf(keyId, password, ringFile).all { !it.isNullOrBlank() }) {
+        sign(publishing.publications)
+    }
 }
