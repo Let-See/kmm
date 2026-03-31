@@ -1,6 +1,6 @@
 import SwiftUI
-import LetSeeShared
-class DefaultResult: LetSeeShared.Result {
+import LetSeeCore
+class DefaultResult: LetSeeCore.Result {
     func failure(error: Response) {
         guard let data = error.byteResponse?.toData() else {return}
         print("@@ error", String(data: data, encoding: .utf8))
