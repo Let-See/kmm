@@ -1,3 +1,6 @@
+require(JavaVersion.current() >= JavaVersion.VERSION_17) {
+    "JDK 17+ is required (found ${JavaVersion.current()}). AGP 9.1.0 + Gradle 9.4.1 need JDK 17."
+}
 
 plugins {
     val agpVersion: String = "9.1.0"
