@@ -17,7 +17,7 @@ class DefaultMocksDirectoryProcessor(
     override fun process(path: String): Map<String, List<Mock>> {
         val files = directoryFilesFetcher.getFiles(path, fileType = "json")
         val filesInformation = files.mapValues { it.value.map { address -> this.fileNameProcessor.process(address) }  }.toMutableMap()
-        val result : MutableMap<String, List<MockFileInformation>> = mutableMapOf()
+        val result: LinkedHashMap<String, List<MockFileInformation>> = linkedMapOf()
 
         if(filesInformation.isEmpty()) {
             return  emptyMap()
@@ -47,7 +47,11 @@ class DefaultMocksDirectoryProcessor(
             result[actualKey] = fileInformation
         }
 
-        val mocks = result.mapValues { it.value.map { info -> this.mockProcessor.process(info) }  }
+        val mocks = result.mapValues { entry ->
+            entry.value
+                .map { info -> this.mockProcessor.process(info) }
+                .sortedBy { it.name.lowercase() }
+        }
 
         return mocks
     }

@@ -6,6 +6,7 @@ import io.github.letsee.implementations.exists
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class GlobalMockDirectoryConfigTests {
     var sut: DefaultGlobalMockDirectoryConfiguration? = null
@@ -26,5 +27,10 @@ class GlobalMockDirectoryConfigTests {
         val expected = "someTestFileName"
 
 //        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GLOBAL_CONFIG_FILE_NAME has leading dot`() {
+        assertEquals(".ls.global.json", GlobalMockDirectoryConfiguration.GLOBAL_CONFIG_FILE_NAME)
     }
 }

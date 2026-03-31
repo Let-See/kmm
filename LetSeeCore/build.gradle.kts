@@ -50,3 +50,8 @@ android {
         minSdk = 23
     }
 }
+
+// SKIE 0.10.10 does not support Kotlin 2.3.20; disable until a compatible version is released.
+skie {
+    isEnabled = false
+}

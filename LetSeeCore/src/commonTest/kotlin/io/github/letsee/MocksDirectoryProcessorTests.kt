@@ -7,7 +7,10 @@ import io.github.letsee.MockImplementations.MockFileNameProcessor
 import io.github.letsee.MockImplementations.MockMockProcessor
 import io.github.letsee.implementations.DefaultGlobalMockDirectoryConfiguration
 import io.github.letsee.implementations.DefaultMocksDirectoryProcessor
+import io.github.letsee.implementations.DefaultResponse
 import io.github.letsee.implementations.GlobalMockDirectoryConfiguration
+import io.github.letsee.models.Mock
+import io.github.letsee.models.MockFileInformation
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -68,4 +71,80 @@ class MocksDirectoryProcessorTests: BaseUnitTest() {
     }
 }
 
+private fun buildOrderingProcessor(
+    files: Map<String, List<String>>,
+    fileInfos: List<MockFileInformation>,
+    mockResults: List<Mock>
+): Pair<DefaultMocksDirectoryProcessor, String> {
+    val cleaner = MockFileNameCleaner()
+    val fnProcessor = MockFileNameProcessor(cleaner, result = fileInfos)
+    val dirFetcher = MockDirectoryFilesFetcher(result = files)
+    val mockProcessor = MockMockProcessor(fnProcessor, results = mockResults)
+    val config = DefaultGlobalMockDirectoryConfiguration(emptyList())
+    val sut = DefaultMocksDirectoryProcessor(fnProcessor, mockProcessor, dirFetcher) { config }
+    return sut to files.keys.minOrNull()!!
+}
 
+class MocksOrderingTests {
+
+    private val path = "/ordering-test/"
+    private val subPath = "${path}api/"
+    private val dummyInfo = MockFileInformation(
+        "${path}.ls.global.json", null, null,
+        MockFileInformation.MockStatus.SUCCESS, ".ls.global.json", null
+    )
+    private val zInfo = MockFileInformation(
+        "${subPath}z-mock.json", null, null,
+        MockFileInformation.MockStatus.SUCCESS, "z-mock.json", null
+    )
+    private val aInfo = MockFileInformation(
+        "${subPath}a-mock.json", null, null,
+        MockFileInformation.MockStatus.SUCCESS, "a-mock.json", null
+    )
+    private val mInfo = MockFileInformation(
+        "${subPath}M-mock.json", null, null,
+        MockFileInformation.MockStatus.SUCCESS, "M-mock.json", null
+    )
+    private val zMock = Mock.SUCCESS("z-mock", DefaultResponse(200u, 200u, null, null, null, emptyMap()), zInfo)
+    private val aMock = Mock.SUCCESS("a-mock", DefaultResponse(200u, 200u, null, null, null, emptyMap()), aInfo)
+    private val mMock = Mock.SUCCESS("M-mock", DefaultResponse(200u, 200u, null, null, null, emptyMap()), mInfo)
+
+    private val files = mapOf(
+        path to listOf(".ls.global.json"),
+        subPath to listOf("z-mock.json", "a-mock.json", "M-mock.json")
+    )
+    private val fileInfos = listOf(dummyInfo, zInfo, aInfo, mInfo)
+    private val mockResults = listOf(zMock, aMock, mMock)
+
+    @Test
+    fun `mock list is sorted alphabetically case-insensitive - z a M becomes a M z`() {
+        val (sut, rootPath) = buildOrderingProcessor(files, fileInfos, mockResults)
+        val result = sut.process(rootPath)
+
+        assertEquals(1, result.size)
+        val mocks = result.values.first()
+        assertEquals(3, mocks.size)
+        assertEquals("a-mock", mocks[0].name)
+        assertEquals("M-mock", mocks[1].name)
+        assertEquals("z-mock", mocks[2].name)
+    }
+
+    @Test
+    fun `processing same directory twice produces identical mock order`() {
+        val (sut1, rootPath1) = buildOrderingProcessor(files, fileInfos, mockResults)
+        val (sut2, rootPath2) = buildOrderingProcessor(files, fileInfos, mockResults)
+
+        val result1 = sut1.process(rootPath1)
+        val result2 = sut2.process(rootPath2)
+
+        assertEquals(result1.keys.toList(), result2.keys.toList())
+        result1.forEach { (key, mocks1) ->
+            val mocks2 = result2[key] ?: error("key $key missing in second run")
+            assertEquals(
+                mocks1.map { it.name },
+                mocks2.map { it.name },
+                "Mock order for key '$key' must be identical across runs"
+            )
+        }
+    }
+}

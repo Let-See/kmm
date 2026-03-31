@@ -5,6 +5,8 @@ import io.github.letsee.implementations.DefaultResponse
 import io.github.letsee.interfaces.Response
 import io.github.letsee.interfaces.Result
 import io.github.letsee.models.DefaultRequest
+import io.github.letsee.models.Mock
+import io.github.letsee.models.MockFileInformation
 import io.github.letsee.models.RequestStatus
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -93,5 +95,85 @@ class DefaultRequestsManagerTest {
 
     @Test
     fun testGetOnRequestRemoved() {
+    }
+
+    @Test
+    fun `respond with mock removes request from stack exactly once`() = runBlocking {
+        var removeCount = 0
+        val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/test")
+        val successMockInfo = MockFileInformation(
+            rawPath = "/some/path/success_200.json",
+            statusCode = 200u,
+            delay = null,
+            status = MockFileInformation.MockStatus.SUCCESS,
+            displayName = "success_200.json",
+            relativePath = null
+        )
+        val mockResponse = Mock.SUCCESS(
+            name = "success_200.json",
+            response = DefaultResponse(200u, 200u, null, null, null, emptyMap()),
+            fileInformation = successMockInfo
+        )
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            trackingSut.requestsStack
+                .take(3)
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.respond(request = givenRequest, withMockResponse = mockResponse)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount, "onRequestRemoved should be called exactly once")
+        assertEquals(3, stackStates.size)
+        assertEquals(emptyList(), stackStates.last(), "stack should be empty after respond")
+    }
+
+    @Test
+    fun `respond with mock does not double-finish - sentinel request survives`() = runBlocking {
+        var removeCount = 0
+        val trackingSut = DefaultRequestsManager(onRequestRemoved = { removeCount++ })
+        val givenRequest = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/test")
+        val successMockInfo = MockFileInformation(
+            rawPath = "/some/path/success_200.json",
+            statusCode = 200u,
+            delay = null,
+            status = MockFileInformation.MockStatus.SUCCESS,
+            displayName = "success_200.json",
+            relativePath = null
+        )
+        val mockResponse = Mock.SUCCESS(
+            name = "success_200.json",
+            response = DefaultResponse(200u, 200u, null, null, null, emptyMap()),
+            fileInformation = successMockInfo
+        )
+
+        // Accept the same request twice to create a sentinel: if a redundant
+        // finish() runs after the when-block, indexOf will find the second copy
+        // and remove it too — making removeCount == 2 and the stack empty.
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            trackingSut.requestsStack
+                .take(4) // init [] → accept [r] → accept [r,r] → finish [r]
+                .collect { stackStates.add(it) }
+        }
+        yield()
+
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.accept(givenRequest, MockResult(), null)
+        trackingSut.respond(request = givenRequest, withMockResponse = mockResponse)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount,
+            "Only one finish() should execute; a double-finish would also remove the sentinel request")
+        assertEquals(4, stackStates.size)
+        assertEquals(1, stackStates.last().size,
+            "Sentinel request must remain on stack; double-finish would leave it empty")
     }
 }

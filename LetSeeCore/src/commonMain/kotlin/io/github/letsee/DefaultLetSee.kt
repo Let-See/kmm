@@ -19,6 +19,7 @@ import io.github.letsee.implementations.GlobalMockDirectoryConfiguration
 import io.github.letsee.implementations.JSONFileNameCleaner
 import io.github.letsee.implementations.JSONFileNameProcessor
 import io.github.letsee.implementations.exists
+import io.github.letsee.implementations.mockKeyNormalised
 import io.github.letsee.interfaces.Result
 import io.github.letsee.interfaces.DirectoryFilesFetcher
 import io.github.letsee.interfaces.DirectoryProcessor
@@ -93,9 +94,15 @@ class DefaultLetSee(
 
     override fun addRequest(request: Request, listener: Result) {
         CoroutineScope(singleThreadDispatcher).launch {
-            requestsManager.accept(request, listener, mocks.keys.firstOrNull{it.startsWith(request.path)}.let { listOf(
-                CategorisedMocks(Category.SPECIFIC, mocks[it] ?: emptyList())
-            ) })
+            val normalizedPath = request.path
+                .substringBefore("?")
+                .split("/")
+                .filter { it.isNotEmpty() }
+                .joinToString("/")
+                .mockKeyNormalised()
+            requestsManager.accept(request, listener, listOf(
+                CategorisedMocks(Category.SPECIFIC, mocks[normalizedPath] ?: emptyList())
+            ))
         }.start()
     }
 

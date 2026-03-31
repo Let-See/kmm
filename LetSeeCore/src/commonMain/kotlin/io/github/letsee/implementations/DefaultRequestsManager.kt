@@ -94,7 +94,6 @@ class DefaultRequestsManager(
             is Mock.LIVE -> this.respond(request)
             is Mock.ERROR -> this.cancel(request)
         }
-        finish(request)
     }
     override suspend fun update(request: Request, status: RequestStatus) {
         indexOf(request)?.let {
