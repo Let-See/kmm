@@ -34,8 +34,6 @@ if (secretPropsFile.exists()) {
     ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
     ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
 }
-println("signing.keyId")
-println(project.name)
 //val javadocJar by tasks.registering(Jar::class) {
 //    archiveClassifier.set("javadoc")
 //}
@@ -66,7 +64,7 @@ publishing {
         pom {
             name.set(project.name)
             description.set("LetSee provides an easy way to provide mock data to your iOS application. The main intention of having a library like this is to have a way to mock the response of requests on runtime in an easy way to be able to test all available scenarios without the need to rerun or change the code or put in the extra effort.")
-            url.set("https://github.com/let-see/SharedCore")
+            url.set("https://github.com/Let-See/LetSee-KMM")
 
             licenses {
                 license {
@@ -82,7 +80,7 @@ publishing {
                 }
             }
             scm {
-                url.set("https://github.com/Let-See/SharedCore")
+                url.set("https://github.com/Let-See/LetSee-KMM")
             }
 
         }
