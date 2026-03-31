@@ -3,6 +3,7 @@ plugins {
     id("com.android.library")
     kotlin("plugin.serialization")
     id("convention.publication")
+    id("co.touchlab.skie") version "0.10.10"
 }
 
 kotlin {
