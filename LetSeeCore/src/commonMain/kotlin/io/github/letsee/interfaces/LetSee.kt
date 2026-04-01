@@ -1,5 +1,6 @@
 package io.github.letsee.interfaces
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import io.github.letsee.Configuration
 import io.github.letsee.models.Mock
@@ -8,6 +9,11 @@ import io.github.letsee.models.Scenario
 
 interface LetSee {
     val config: StateFlow<Configuration>
+    /**
+     * Emits the new value of [Configuration.isMockEnabled] whenever it changes.
+     * Does not replay the current value on subscription — only subsequent changes trigger emissions.
+     */
+    val mockStateChanged: Flow<Boolean>
     /**
      * All available mocks that LetSee have found on the given mock directory
      */
@@ -51,6 +57,9 @@ interface LetSee {
      * @return The data task that would be run.
      */
     fun addRequest(request: Request, listener: Result)
+
+    fun activateScenario(scenario: Scenario)
+    fun deactivateScenario()
 
     val requestsManager: RequestsManager
 }

@@ -1,6 +1,9 @@
 package io.github.letsee.models
 
+import io.github.letsee.Configuration
 import kotlin.random.Random
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 interface Request {
     val headers: Map<String, String>
@@ -8,6 +11,11 @@ interface Request {
     val uri: String
     var path: String
     val id: Int
+    val logId: String
+
+    companion object {
+        const val LOGGER_HEADER_KEY = "LETSEE-LOGGER-ID"
+    }
 }
 
 data class DefaultRequest(
@@ -17,4 +25,15 @@ data class DefaultRequest(
     override var path: String
 ) : Request {
     override val id = Random.nextInt()
+
+    @OptIn(ExperimentalUuidApi::class)
+    override val logId: String = Uuid.random().toString()
+}
+
+fun Request.displayName(configuration: Configuration): String {
+    return if (configuration.shouldCutBaseURLFromURLsTitle) {
+        uri.replaceFirst(Regex(Regex.escape(configuration.baseURL), RegexOption.IGNORE_CASE), "")
+    } else {
+        uri
+    }
 }

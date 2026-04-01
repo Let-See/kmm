@@ -19,20 +19,21 @@ import io.github.letsee.models.Mock
 import io.github.letsee.models.MockFileInformation
 import io.github.letsee.models.Request
 import io.github.letsee.models.RequestStatus
+import io.github.letsee.models.Scenario
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CapturingRequestsManager : RequestsManager {
@@ -51,7 +52,7 @@ class CapturingRequestsManager : RequestsManager {
     }
 
     suspend fun awaitAccept(): List<CategorisedMocks>? {
-        return withContext(Dispatchers.Default) { withTimeout(2000) { _deferred.await() } }
+        return _deferred.await()
     }
 
     override suspend fun accept(request: Request, listener: Result, mocks: List<CategorisedMocks>?) {
@@ -91,8 +92,9 @@ class DefaultLetSeeTest {
         capturingManager = CapturingRequestsManager()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun letSeeWith(mocks: Map<String, List<Mock>>): DefaultLetSee =
-        DefaultLetSee(requestsManager = capturingManager, mocks = mocks)
+        DefaultLetSee(requestsManager = capturingManager, mocks = mocks, dispatcher = UnconfinedTestDispatcher())
 
     @Test
     fun `exact path match`() = runTest {
@@ -189,7 +191,8 @@ class DefaultLetSeeTest {
         val processor = DefaultMocksDirectoryProcessor(fnProcessor, mockProcessor, dirFetcher) { config }
 
         val processorMocks = processor.process(rootPath)
-        val sut = DefaultLetSee(requestsManager = capturingManager, mocks = processorMocks)
+        @OptIn(ExperimentalCoroutinesApi::class)
+        val sut = DefaultLetSee(requestsManager = capturingManager, mocks = processorMocks, dispatcher = UnconfinedTestDispatcher())
 
         val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users")
         sut.addRequest(request, MockResult())
@@ -200,10 +203,11 @@ class DefaultLetSeeTest {
         assertEquals("success_200.json", received?.first()?.mocks?.first()?.name)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `stress test - 50 concurrent addRequest calls all complete without crashes`() = runTest {
         val countingManager = CountingRequestsManager(expected = 50)
-        val sut = DefaultLetSee(requestsManager = countingManager, mocks = mapOf(usersKey to usersMocks))
+        val sut = DefaultLetSee(requestsManager = countingManager, mocks = mapOf(usersKey to usersMocks), dispatcher = UnconfinedTestDispatcher())
         repeat(50) {
             sut.addRequest(
                 DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users/"),
@@ -214,6 +218,7 @@ class DefaultLetSeeTest {
         assertEquals(50, countingManager.acceptedCount)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `exception in addRequest coroutine is captured by handler and does not crash`() = runTest {
         val capturedThrowable = CompletableDeferred<Throwable>()
@@ -221,16 +226,35 @@ class DefaultLetSeeTest {
         val sut = DefaultLetSee(
             requestsManager = throwingManager,
             mocks = mapOf(usersKey to usersMocks),
+            dispatcher = UnconfinedTestDispatcher(),
             onCoroutineError = { capturedThrowable.complete(it) }
         )
         sut.addRequest(
             DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users/"),
             MockResult()
         )
-        val exception = withContext(Dispatchers.Default) { withTimeout(2000) { capturedThrowable.await() } }
+        val exception = capturedThrowable.await()
         assertTrue(exception is IllegalStateException,
             "Expected IllegalStateException but got ${exception::class.simpleName}")
         assertEquals("Simulated failure in accept", exception.message)
+    }
+
+    @Test
+    fun `activateScenario sets active scenario`() = runTest {
+        val sut = letSeeWith(emptyMap())
+        val scenario = Scenario("test-scenario", listOf(Mock.LIVE))
+        sut.activateScenario(scenario)
+        assertEquals(scenario, capturingManager.scenarioManager.activeScenario.value)
+    }
+
+    @Test
+    fun `deactivateScenario clears active scenario`() = runTest {
+        val sut = letSeeWith(emptyMap())
+        val scenario = Scenario("test-scenario", listOf(Mock.LIVE))
+        sut.activateScenario(scenario)
+        assertEquals(scenario, capturingManager.scenarioManager.activeScenario.value)
+        sut.deactivateScenario()
+        assertNull(capturingManager.scenarioManager.activeScenario.value)
     }
 }
 
@@ -249,8 +273,8 @@ class CountingRequestsManager(private val expected: Int) : RequestsManager {
         _count.update { it + 1 }
     }
 
-    suspend fun awaitAll(): Unit = withContext(Dispatchers.Default) {
-        withTimeout(5000) { _count.first { it >= expected } }
+    suspend fun awaitAll() {
+        _count.first { it >= expected }
     }
 
     override suspend fun respond(request: Request, withResponse: Response) {}
