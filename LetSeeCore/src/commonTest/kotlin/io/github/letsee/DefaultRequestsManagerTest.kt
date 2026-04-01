@@ -18,6 +18,7 @@ import kotlinx.coroutines.yield
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MockResult: Result {
     override fun success(response: Response) {
@@ -226,6 +227,177 @@ class DefaultRequestsManagerTest {
         assertEquals(1, removeCount, "onRequestRemoved should be called exactly once")
         assertEquals(3, stackStates.size)
         assertEquals(emptyList(), stackStates.last(), "stack should be empty after respond")
+    }
+
+    // ── Live-response tests ──────────────────────────────────────────────────
+
+    @Test
+    fun `live response - success handler returns response via listener`() = runTest {
+        val liveResponse = DefaultResponse(200u, 200u, null, null, null, emptyMap())
+        var successResult: Response? = null
+        val trackingResult = object : Result {
+            override fun success(response: Response) { successResult = response }
+            override fun failure(error: Response) {}
+        }
+        val liveSut = DefaultRequestsManager(
+            liveRequestHandlerProvider = { { liveResponse } }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+        liveSut.accept(request, trackingResult, null)
+        liveSut.respond(request)
+
+        assertEquals(liveResponse, successResult, "success callback should receive the live response")
+    }
+
+    @Test
+    fun `live response - exception in handler reports error via failure callback`() = runTest {
+        var removeCount = 0
+        var failureResult: Response? = null
+        val trackingResult = object : Result {
+            override fun success(response: Response) {}
+            override fun failure(error: Response) { failureResult = error }
+        }
+        val liveSut = DefaultRequestsManager(
+            onRequestRemoved = { removeCount++ },
+            liveRequestHandlerProvider = { { throw RuntimeException("timeout") } }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            // init[] → accept[r(IDLE)] → update[r(LOADING)] → finish[]
+            liveSut.requestsStack.take(4).collect { stackStates.add(it) }
+        }
+        yield()
+
+        liveSut.accept(request, trackingResult, null)
+        liveSut.respond(request)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount, "request should be removed exactly once on handler exception")
+        assertEquals(emptyList(), stackStates.last(), "stack should be empty after error response")
+        assertEquals(502u, failureResult?.responseCode, "error response should use 502 status")
+        assertEquals("Live request failed: timeout", failureResult?.errorMessage)
+    }
+
+    @Test
+    fun `live response - null handler reports not-configured error via failure callback`() = runTest {
+        var removeCount = 0
+        var failureResult: Response? = null
+        val trackingResult = object : Result {
+            override fun success(response: Response) {}
+            override fun failure(error: Response) { failureResult = error }
+        }
+        val liveSut = DefaultRequestsManager(
+            onRequestRemoved = { removeCount++ },
+            liveRequestHandlerProvider = { null }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            // init[] → accept[r(IDLE)] → finish[]
+            liveSut.requestsStack.take(3).collect { stackStates.add(it) }
+        }
+        yield()
+
+        liveSut.accept(request, trackingResult, null)
+        liveSut.respond(request)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount, "request should be removed exactly once when handler is null")
+        assertEquals(emptyList(), stackStates.last(), "stack should be empty after error response")
+        assertEquals(501u, failureResult?.responseCode, "error response should use 501 status")
+        assertTrue(failureResult?.errorMessage?.contains("not configured") == true,
+            "error message should indicate live mode is not configured")
+    }
+
+    @Test
+    fun `live response - finish called exactly once on success via sentinel pattern`() = runTest {
+        var removeCount = 0
+        val liveResponse = DefaultResponse(200u, 200u, null, null, null, emptyMap())
+        val liveSut = DefaultRequestsManager(
+            onRequestRemoved = { removeCount++ },
+            liveRequestHandlerProvider = { { liveResponse } }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            // init[] → accept[r] → accept[r,r] → update[r(LOADING),r] → finish[r]  (sentinel stays)
+            liveSut.requestsStack.take(5).collect { stackStates.add(it) }
+        }
+        yield()
+
+        liveSut.accept(request, MockResult(), null)
+        liveSut.accept(request, MockResult(), null)  // sentinel duplicate
+        liveSut.respond(request)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount,
+            "finish should fire exactly once; a second call would remove the sentinel")
+        assertEquals(5, stackStates.size)
+        assertEquals(1, stackStates.last().size,
+            "sentinel must survive; double-finish would leave stack empty")
+    }
+
+    @Test
+    fun `live response - finish called exactly once on exception via sentinel pattern`() = runTest {
+        var removeCount = 0
+        val liveSut = DefaultRequestsManager(
+            onRequestRemoved = { removeCount++ },
+            liveRequestHandlerProvider = { { throw RuntimeException("timeout") } }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            // init[] → accept[r] → accept[r,r] → update[r(LOADING),r] → finish[r]
+            liveSut.requestsStack.take(5).collect { stackStates.add(it) }
+        }
+        yield()
+
+        liveSut.accept(request, MockResult(), null)
+        liveSut.accept(request, MockResult(), null)  // sentinel duplicate
+        liveSut.respond(request)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount,
+            "finish should fire exactly once; a second call would remove the sentinel")
+        assertEquals(1, stackStates.last().size,
+            "sentinel must survive; double-finish would leave stack empty")
+    }
+
+    @Test
+    fun `live response - finish called exactly once on null handler via sentinel pattern`() = runTest {
+        var removeCount = 0
+        val liveSut = DefaultRequestsManager(
+            onRequestRemoved = { removeCount++ },
+            liveRequestHandlerProvider = { null }
+        )
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+
+        val stackStates: MutableList<List<AcceptedRequest>> = mutableListOf()
+        val collectorJob = launch {
+            // init[] → accept[r] → accept[r,r] → finish[r]
+            liveSut.requestsStack.take(4).collect { stackStates.add(it) }
+        }
+        yield()
+
+        liveSut.accept(request, MockResult(), null)
+        liveSut.accept(request, MockResult(), null)  // sentinel duplicate
+        liveSut.respond(request)
+
+        collectorJob.join()
+
+        assertEquals(1, removeCount,
+            "finish should fire exactly once; a second call would remove the sentinel")
+        assertEquals(1, stackStates.last().size,
+            "sentinel must survive; double-finish would leave stack empty")
     }
 
     @Test

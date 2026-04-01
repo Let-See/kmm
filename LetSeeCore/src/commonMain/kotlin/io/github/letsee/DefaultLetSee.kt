@@ -30,6 +30,7 @@ import io.github.letsee.implementations.JSONFileNameProcessor
 import io.github.letsee.implementations.appendSystemMocks
 import io.github.letsee.implementations.exists
 import io.github.letsee.implementations.mockKeyNormalised
+import io.github.letsee.interfaces.Response
 import io.github.letsee.interfaces.Result
 import io.github.letsee.interfaces.DirectoryFilesFetcher
 import io.github.letsee.interfaces.DirectoryProcessor
@@ -67,10 +68,15 @@ class DefaultLetSee(
     private val dispatcher: CoroutineDispatcher = defaultDispatcher(),
     private val onCoroutineError: (Throwable) -> Unit = { println("[DefaultLetSee] Coroutine exception: ${it.stackTraceToString()}") }
     ): LetSee {
+    @Volatile override var liveRequestHandler: (suspend (Request) -> Response)? = null
+
     private val scenarioFileNameToMockMapper: (String)->List<Mock> = {
         this.mocks[it] ?: emptyList()
     }
     init {
+        (requestsManager as? DefaultRequestsManager)?.let {
+            it.liveRequestHandlerProvider = { this.liveRequestHandler }
+        } ?: println("[DefaultLetSee] Warning: requestsManager is not DefaultRequestsManager — live request forwarding disabled")
         scenariosDirectoryProcessor  = scenariosDirectoryProcessor ?: DefaultScenariosDirectoryProcessor(directoryFilesFetcher,
             fileNameProcessor,
             scenarioFileInformationProcessor,

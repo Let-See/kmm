@@ -61,5 +61,12 @@ interface LetSee {
     fun activateScenario(scenario: Scenario)
     fun deactivateScenario()
 
+    /**
+     * Platform-provided HTTP execution strategy for forwarding requests to the real server.
+     * Set this on the platform layer (Android/iOS) before any live requests are made.
+     * When null, responding with [io.github.letsee.models.Mock.LIVE] cancels the request.
+     */
+    var liveRequestHandler: (suspend (Request) -> Response)?
+
     val requestsManager: RequestsManager
 }

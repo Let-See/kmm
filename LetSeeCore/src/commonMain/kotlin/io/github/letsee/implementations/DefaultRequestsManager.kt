@@ -11,11 +11,13 @@ import io.github.letsee.interfaces.Response
 import io.github.letsee.interfaces.ScenarioManager
 import io.github.letsee.models.Mock
 import io.github.letsee.models.Request
+import kotlin.coroutines.cancellation.CancellationException
 
 class DefaultRequestsManager(
     override val onRequestAccepted: ((Request) -> Unit)? = null,
     override val onRequestRemoved:  ((Request) -> Unit)? = null,
-    override val scenarioManager: ScenarioManager = DefaultScenarioManager()
+    override val scenarioManager: ScenarioManager = DefaultScenarioManager(),
+    internal var liveRequestHandlerProvider: () -> (suspend (Request) -> Response)? = { null }
 ) : RequestsManager {
     private val _requestsStack = MutableSharedFlow<List<AcceptedRequest>>(replay = 1)
     init {
@@ -52,7 +54,28 @@ class DefaultRequestsManager(
 
     // Live To Server
     override suspend fun respond(request: Request) {
-        TODO("Not yet implemented")
+        val handler = liveRequestHandlerProvider()
+        if (handler == null) {
+            respond(request, withResponse = DefaultResponse(
+                responseCode = 501u, requestCode = 501u, byteResponse = null,
+                errorMessage = "Live mode not configured: liveRequestHandler is null",
+                statusText = null, headers = emptyMap()
+            ))
+            return
+        }
+        update(request, RequestStatus.LOADING)
+        try {
+            val response = handler(request)
+            respond(request, withResponse = response)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            respond(request, withResponse = DefaultResponse(
+                responseCode = 502u, requestCode = 502u, byteResponse = null,
+                errorMessage = "Live request failed: ${e.message}",
+                statusText = null, headers = emptyMap()
+            ))
+        }
     }
     private fun indexOf(request: Request): Int? {
          return currentStack.indexOfFirst { it.request.id == request.id }.let {index ->

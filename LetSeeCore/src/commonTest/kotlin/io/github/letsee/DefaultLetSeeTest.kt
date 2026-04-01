@@ -247,6 +247,41 @@ class DefaultLetSeeTest {
         assertEquals(scenario, capturingManager.scenarioManager.activeScenario.value)
     }
 
+    // ── Live-handler integration test ────────────────────────────────────────
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `liveRequestHandler is wired through DefaultLetSee to DefaultRequestsManager`() = runTest {
+        val liveResponse = DefaultResponse(200u, 200u, null, null, null, emptyMap())
+        var handlerInvoked = false
+
+        // Use the default DefaultRequestsManager (no override) so the wiring is exercised.
+        val sut = DefaultLetSee(dispatcher = UnconfinedTestDispatcher())
+        sut.liveRequestHandler = { _ ->
+            handlerInvoked = true
+            liveResponse
+        }
+
+        var successResult: Response? = null
+        val listener = object : Result {
+            override fun success(response: Response) { successResult = response }
+            override fun failure(error: Response) {}
+        }
+
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/live")
+        sut.addRequest(request, listener)
+
+        // With UnconfinedTestDispatcher the accept coroutine runs immediately,
+        // so the stack already has the (header-injected) request.
+        val acceptedRequest = sut.requestsManager.requestsStack.replayCache.first().first().request
+        sut.requestsManager.respond(acceptedRequest, Mock.LIVE)
+
+        sut.close()
+
+        assertTrue(handlerInvoked, "liveRequestHandler should be invoked when Mock.LIVE is used")
+        assertEquals(liveResponse, successResult, "live response should flow through to the listener")
+    }
+
     @Test
     fun `deactivateScenario clears active scenario`() = runTest {
         val sut = letSeeWith(emptyMap())
