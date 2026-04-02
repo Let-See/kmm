@@ -30,6 +30,9 @@ import io.github.letsee.implementations.JSONFileNameProcessor
 import io.github.letsee.implementations.appendSystemMocks
 import io.github.letsee.implementations.exists
 import io.github.letsee.implementations.mockKeyNormalised
+import io.github.letsee.implementations.LoggingResult
+import io.github.letsee.implementations.currentTimeMillis
+import io.github.letsee.interfaces.RequestResponseLogger
 import io.github.letsee.interfaces.Response
 import io.github.letsee.interfaces.Result
 import io.github.letsee.interfaces.DirectoryFilesFetcher
@@ -66,7 +69,8 @@ class DefaultLetSee(
     private var _config: MutableStateFlow<Configuration> = MutableStateFlow(Configuration.default),
     override val requestsManager: RequestsManager = DefaultRequestsManager(),
     private val dispatcher: CoroutineDispatcher = defaultDispatcher(),
-    private val onCoroutineError: (Throwable) -> Unit = { println("[DefaultLetSee] Coroutine exception: ${it.stackTraceToString()}") }
+    private val onCoroutineError: (Throwable) -> Unit = { println("[DefaultLetSee] Coroutine exception: ${it.stackTraceToString()}") },
+    override val logger: RequestResponseLogger? = null
     ): LetSee {
     @Volatile override var liveRequestHandler: (suspend (Request) -> Response)? = null
 
@@ -150,7 +154,13 @@ class DefaultLetSee(
                     headers = request.headers + (Request.LOGGER_HEADER_KEY to request.logId)
                 )
             }
-            requestsManager.accept(requestWithHeader, listener,
+            val effectiveListener = if (logger != null) {
+                logger.logRequest(requestWithHeader)
+                LoggingResult(listener, logger, requestWithHeader, currentTimeMillis())
+            } else {
+                listener
+            }
+            requestsManager.accept(requestWithHeader, effectiveListener,
                 appendSystemMocks(CategorisedMocks(Category.SPECIFIC, mocks[normalizedPath] ?: emptyList()))
             )
         }

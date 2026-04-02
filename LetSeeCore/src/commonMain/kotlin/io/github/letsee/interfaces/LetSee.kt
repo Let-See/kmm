@@ -8,6 +8,12 @@ import io.github.letsee.models.Request
 import io.github.letsee.models.Scenario
 
 interface LetSee {
+    /**
+     * Optional request/response logger. When non-null, every [addRequest] call logs the
+     * outgoing request, and every response (success, failure, or cancel) logs the result.
+     * Consumers can read [RequestResponseLogger.storage] to find the log file path.
+     */
+    val logger: RequestResponseLogger?
     val config: StateFlow<Configuration>
     /**
      * Emits the new value of [Configuration.isMockEnabled] whenever it changes.

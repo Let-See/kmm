@@ -52,4 +52,5 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material)
     implementation(libs.activity.compose)
+    implementation(libs.okhttp)
 }
