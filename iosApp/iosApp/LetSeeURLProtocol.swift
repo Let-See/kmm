@@ -1,6 +1,6 @@
 import Foundation
 import os.lock
-import LetSeeCore
+import LetSeeUI
 
 /// A `URLProtocol` subclass that delegates all interception logic to the KMM `LetSeeCore` framework.
 ///

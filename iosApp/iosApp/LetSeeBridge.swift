@@ -1,6 +1,6 @@
 import Foundation
 import os.lock
-import LetSeeCore
+import LetSeeUI
 
 // MARK: - URLRequest → KMM DefaultRequest
 

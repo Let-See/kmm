@@ -1,7 +1,7 @@
 import UIKit
 import LetSeeUI
 
-public extension LetSeeKit {
+extension LetSeeKit {
 
     private(set) static var debugWindow: LetSeeWindow? {
         get { _storage.window }

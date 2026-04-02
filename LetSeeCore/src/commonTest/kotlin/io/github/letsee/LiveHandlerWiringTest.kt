@@ -44,7 +44,7 @@ class LiveHandlerWiringTest {
     }
 
     @Test
-    fun `live handler invoked through respond(request) returns correct response`() = runTest {
+    fun `live handler invoked through respond returns correct response`() = runTest {
         val expectedBody = "hello".encodeToByteArray()
         val letSee = DefaultLetSee()
         letSee.liveRequestHandler = { request ->
@@ -76,7 +76,7 @@ class LiveHandlerWiringTest {
     }
 
     @Test
-    fun `live handler network error results in 502 via respond(request)`() = runTest {
+    fun `live handler network error results in 502 via respond`() = runTest {
         val letSee = DefaultLetSee()
         letSee.liveRequestHandler = {
             throw RuntimeException("Connection refused")

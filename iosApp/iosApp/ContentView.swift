@@ -1,5 +1,5 @@
 import SwiftUI
-import LetSeeCore
+import LetSeeUI
 
 struct ContentView: View {
     @State private var breeds: [Breed] = []

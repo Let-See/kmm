@@ -1,5 +1,5 @@
 import Foundation
-import LetSeeCore
+import LetSeeUI
 
 /// Configures the KMM `liveRequestHandler` so that selecting "Live" for a request
 /// forwards it to the real server using a plain `URLSession`.

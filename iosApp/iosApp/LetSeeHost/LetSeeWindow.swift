@@ -1,5 +1,4 @@
 import UIKit
-import LetSeeCore
 import LetSeeUI
 
 /// Transparent overlay window that floats a circular "LS" debug button above all app content.

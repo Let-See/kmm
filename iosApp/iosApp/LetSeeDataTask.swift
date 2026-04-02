@@ -1,5 +1,5 @@
 import Foundation
-import LetSeeCore
+import LetSeeUI
 
 public extension LetSeeKit {
 

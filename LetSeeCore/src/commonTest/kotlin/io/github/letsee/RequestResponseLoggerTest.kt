@@ -199,7 +199,7 @@ class RequestResponseLoggerTest {
 
     // clear() delegates to storage
     @Test
-    fun `logger clear() clears the underlying storage`() {
+    fun `logger clear clears the underlying storage`() {
         logger.logRequest(request)
         assertTrue(storage.content.isNotEmpty())
         logger.clear()

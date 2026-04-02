@@ -29,7 +29,7 @@ class DefaultMocksDirectoryProcessor(
             return  emptyMap()
         }
 
-        val orderedItem = filesInformation.keys.sortedBy { it }.toMutableList()
+        val orderedItem = filesInformation.keys.sortedBy { it.lowercase() }.toMutableList()
         val globalConfigs = globalMockDirectoryConfig?.let { it() } ?: GlobalMockDirectoryConfiguration.exists(inDirectory = orderedItem.first())
 
         // if globalConfigs is available it means that this folder should be the main folder and no file should be inside it,

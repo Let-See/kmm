@@ -19,6 +19,11 @@
 		F804493C29C7237000CFE188 /* Scenarios in Resources */ = {isa = PBXBuildFile; fileRef = F804493B29C7237000CFE188 /* Scenarios */; };
 		F839DA2029BB9288009C23C6 /* somejson.json in Resources */ = {isa = PBXBuildFile; fileRef = F839DA1F29BB921C009C23C6 /* somejson.json */; };
 		F84B906229C101DA0023B5D9 /* Mocks in Resources */ = {isa = PBXBuildFile; fileRef = F84B906129C101DA0023B5D9 /* Mocks */; };
+		AA00012A2D12000100B1C2D3 /* Breed.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011A2D12000100B1C2D3 /* Breed.swift */; };
+		AA00012B2D12000100B1C2D3 /* CatApiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011B2D12000100B1C2D3 /* CatApiClient.swift */; };
+		AA00012C2D12000100B1C2D3 /* BreedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011C2D12000100B1C2D3 /* BreedDetailView.swift */; };
+		AA00012D2D12000100B1C2D3 /* LetSeeKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011D2D12000100B1C2D3 /* LetSeeKit.swift */; };
+		AA00012E2D12000100B1C2D3 /* LetSeeWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011E2D12000100B1C2D3 /* LetSeeWindow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +54,11 @@
 		F804493B29C7237000CFE188 /* Scenarios */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Scenarios; sourceTree = "<group>"; };
 		F839DA1F29BB921C009C23C6 /* somejson.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = somejson.json; sourceTree = "<group>"; };
 		F84B906129C101DA0023B5D9 /* Mocks */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Mocks; sourceTree = "<group>"; };
+		AA00011A2D12000100B1C2D3 /* Breed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Breed.swift; sourceTree = "<group>"; };
+		AA00011B2D12000100B1C2D3 /* CatApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatApiClient.swift; sourceTree = "<group>"; };
+		AA00011C2D12000100B1C2D3 /* BreedDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreedDetailView.swift; sourceTree = "<group>"; };
+		AA00011D2D12000100B1C2D3 /* LetSeeKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeKit.swift; sourceTree = "<group>"; };
+		AA00011E2D12000100B1C2D3 /* LetSeeWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeWindow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,26 +97,39 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7555FF7D242A565900829871 /* iosApp */ = {
-			isa = PBXGroup;
-			children = (
-				F804493B29C7237000CFE188 /* Scenarios */,
-				F84B906129C101DA0023B5D9 /* Mocks */,
-				058557BA273AAA24004C7B11 /* Assets.xcassets */,
-				7555FF82242A565900829871 /* ContentView.swift */,
-				43A9D0102D11200100A1B2C3 /* LetSeeBridge.swift */,
-				43A9D0112D11200100A1B2C3 /* LetSeeSessionConfiguration.swift */,
-				43A9D0122D11200100A1B2C3 /* LetSeeDataTask.swift */,
-				43A9D0132D11200100A1B2C3 /* LetSeeLiveHandler.swift */,
-				43A9D0142D11200100A1B2C3 /* LetSeeURLProtocol.swift */,
-				7555FF8C242A565B00829871 /* Info.plist */,
-				2152FB032600AC8F00CF470E /* iOSApp.swift */,
-				058557D7273AAEEB004C7B11 /* Preview Content */,
-				F839DA1F29BB921C009C23C6 /* somejson.json */,
-			);
-			path = iosApp;
-			sourceTree = "<group>";
-		};
+	AA00013A2D12000100B1C2D3 /* LetSeeHost */ = {
+		isa = PBXGroup;
+		children = (
+			AA00011D2D12000100B1C2D3 /* LetSeeKit.swift */,
+			AA00011E2D12000100B1C2D3 /* LetSeeWindow.swift */,
+		);
+		path = LetSeeHost;
+		sourceTree = "<group>";
+	};
+	7555FF7D242A565900829871 /* iosApp */ = {
+		isa = PBXGroup;
+		children = (
+			F804493B29C7237000CFE188 /* Scenarios */,
+			F84B906129C101DA0023B5D9 /* Mocks */,
+			058557BA273AAA24004C7B11 /* Assets.xcassets */,
+			7555FF82242A565900829871 /* ContentView.swift */,
+			AA00011A2D12000100B1C2D3 /* Breed.swift */,
+			AA00011B2D12000100B1C2D3 /* CatApiClient.swift */,
+			AA00011C2D12000100B1C2D3 /* BreedDetailView.swift */,
+			43A9D0102D11200100A1B2C3 /* LetSeeBridge.swift */,
+			43A9D0112D11200100A1B2C3 /* LetSeeSessionConfiguration.swift */,
+			43A9D0122D11200100A1B2C3 /* LetSeeDataTask.swift */,
+			43A9D0132D11200100A1B2C3 /* LetSeeLiveHandler.swift */,
+			43A9D0142D11200100A1B2C3 /* LetSeeURLProtocol.swift */,
+			AA00013A2D12000100B1C2D3 /* LetSeeHost */,
+			7555FF8C242A565B00829871 /* Info.plist */,
+			2152FB032600AC8F00CF470E /* iOSApp.swift */,
+			058557D7273AAEEB004C7B11 /* Preview Content */,
+			F839DA1F29BB921C009C23C6 /* somejson.json */,
+		);
+		path = iosApp;
+		sourceTree = "<group>";
+	};
 		7555FFB0242A642200829871 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -200,7 +223,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :LetSeeCore:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :LetSeeCore:embedAndSignAppleFrameworkForXcode :LetSeeUI:embedAndSignAppleFrameworkForXcode\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -208,15 +231,20 @@
 		7555FF77242A565900829871 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (
-				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
-				7555FF83242A565900829871 /* ContentView.swift in Sources */,
-				43A9D0002D11200100A1B2C3 /* LetSeeBridge.swift in Sources */,
-				43A9D0012D11200100A1B2C3 /* LetSeeSessionConfiguration.swift in Sources */,
-				43A9D0022D11200100A1B2C3 /* LetSeeDataTask.swift in Sources */,
-				43A9D0032D11200100A1B2C3 /* LetSeeLiveHandler.swift in Sources */,
-				43A9D0042D11200100A1B2C3 /* LetSeeURLProtocol.swift in Sources */,
-			);
+		files = (
+			2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
+			7555FF83242A565900829871 /* ContentView.swift in Sources */,
+			AA00012A2D12000100B1C2D3 /* Breed.swift in Sources */,
+			AA00012B2D12000100B1C2D3 /* CatApiClient.swift in Sources */,
+			AA00012C2D12000100B1C2D3 /* BreedDetailView.swift in Sources */,
+			43A9D0002D11200100A1B2C3 /* LetSeeBridge.swift in Sources */,
+			43A9D0012D11200100A1B2C3 /* LetSeeSessionConfiguration.swift in Sources */,
+			43A9D0022D11200100A1B2C3 /* LetSeeDataTask.swift in Sources */,
+			43A9D0032D11200100A1B2C3 /* LetSeeLiveHandler.swift in Sources */,
+			43A9D0042D11200100A1B2C3 /* LetSeeURLProtocol.swift in Sources */,
+			AA00012D2D12000100B1C2D3 /* LetSeeKit.swift in Sources */,
+			AA00012E2D12000100B1C2D3 /* LetSeeWindow.swift in Sources */,
+		);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -338,62 +366,68 @@
 			};
 			name = Release;
 		};
-		7555FFA6242A565B00829871 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				ENABLE_PREVIEWS = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-				);
-				INFOPLIST_FILE = iosApp/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					LetSeeCore,
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = orgIdentifier.iosApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
+	7555FFA6242A565B00829871 /* Debug */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CODE_SIGN_STYLE = Automatic;
+			DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+			ENABLE_PREVIEWS = YES;
+			FRAMEWORK_SEARCH_PATHS = (
+				"$(inherited)",
+				"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				"$(SRCROOT)/../LetSeeUI/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+			);
+			INFOPLIST_FILE = iosApp/Info.plist;
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			OTHER_LDFLAGS = (
+				"$(inherited)",
+				"-framework",
+				LetSeeCore,
+				"-framework",
+				LetSeeUI,
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = orgIdentifier.iosApp;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
 		};
-		7555FFA7242A565B00829871 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				ENABLE_PREVIEWS = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
-				);
-				INFOPLIST_FILE = iosApp/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-framework",
-					LetSeeCore,
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = orgIdentifier.iosApp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
+		name = Debug;
+	};
+	7555FFA7242A565B00829871 /* Release */ = {
+		isa = XCBuildConfiguration;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CODE_SIGN_STYLE = Automatic;
+			DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
+			ENABLE_PREVIEWS = YES;
+			FRAMEWORK_SEARCH_PATHS = (
+				"$(inherited)",
+				"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+				"$(SRCROOT)/../LetSeeUI/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
+			);
+			INFOPLIST_FILE = iosApp/Info.plist;
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			OTHER_LDFLAGS = (
+				"$(inherited)",
+				"-framework",
+				LetSeeCore,
+				"-framework",
+				LetSeeUI,
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = orgIdentifier.iosApp;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
 		};
+		name = Release;
+	};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */

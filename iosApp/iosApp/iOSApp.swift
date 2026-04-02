@@ -1,5 +1,5 @@
 import SwiftUI
-import LetSeeCore
+import LetSeeUI
 
 @main
 struct iOSApp: App {
