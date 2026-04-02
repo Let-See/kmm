@@ -1,0 +1,5 @@
+{
+  "message": "API key is invalid or missing",
+  "status": 401,
+  "level": "error"
+}

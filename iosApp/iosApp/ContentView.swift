@@ -2,125 +2,134 @@ import SwiftUI
 import LetSeeCore
 
 struct ContentView: View {
-    @State private var statusText = "Tap to run request"
+    @State private var breeds: [Breed] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    private let client = CatApiClient.shared
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text(statusText)
-                .multilineTextAlignment(.center)
-                .padding()
-
-            Button("Run via LetSeeURLProtocol") {
-                runSampleRequest()
-            }
-
-            Button("Run async via LetSeeKit") {
-                Task { await runAsyncRequest() }
-            }
-        }
-        .onAppear {
-            setupLetSee()
-        }
-    }
-
-    // MARK: - Setup
-
-    private func setupLetSee() {
-        var letSee = DefaultLetSee.Companion.shared.letSee
-
-        letSee.setMocks(path: Bundle.main.bundlePath + "/Mocks")
-        letSee.setScenarios(path: Bundle.main.bundlePath + "/Scenarios")
-
-        letSee.setConfigurations(
-            config: Configuration(isMockEnabled: true, shouldCutBaseURLFromURLsTitle: false, baseURL: "")
-        )
-
-        // Wire the live request handler so "Live" forwards to the real server
-        // via a plain URLSession (bypasses LetSeeURLProtocol).
-        configureLetSeeLiveHandler()
-
-        if let scenario = letSee.scenarios.first {
-            letSee.requestsManager.scenarioManager.activate(scenario: scenario) { _ in }
-        }
-    }
-
-    // MARK: - URLProtocol-based request (callback style via LetSeeKit.runDataTask)
-
-    private func runSampleRequest() {
-        let url = URL(string: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-
-        let task = LetSeeKit.runDataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                if let error {
-                    statusText = "Error: \(error.localizedDescription)"
-                } else if let data, let body = String(data: data, encoding: .utf8) {
-                    statusText = "Success: \(body.prefix(80))"
-                } else if let response = response as? HTTPURLResponse {
-                    statusText = "HTTP \(response.statusCode) — no body"
+        NavigationView {
+            Group {
+                if isLoading && breeds.isEmpty {
+                    ProgressView("Loading breeds…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorMessage, breeds.isEmpty {
+                    errorView(message: errorMessage)
                 } else {
-                    statusText = "Completed (no data)"
+                    breedList
+                }
+            }
+            .navigationTitle("Cat Breeds")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task { await fetchBreeds() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(isLoading)
                 }
             }
         }
-        task.resume()
-        statusText = "Request in flight…"
+        .navigationViewStyle(.stack)
+        .task {
+            await fetchBreeds()
+        }
     }
 
-    // MARK: - async convenience overload
-
-    private func runAsyncRequest() async {
-        let url = URL(string: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-
-        do {
-            let (data, response) = try await LetSeeKit.data(for: request)
-            let body = String(data: data, encoding: .utf8) ?? "(binary)"
-            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-            await MainActor.run {
-                statusText = "Async HTTP \(code): \(body.prefix(60))"
-            }
-        } catch {
-            await MainActor.run {
-                statusText = "Async error: \(error.localizedDescription)"
+    private var breedList: some View {
+        List(breeds) { breed in
+            NavigationLink(destination: BreedDetailView(breed: breed)) {
+                BreedRow(breed: breed)
             }
         }
+        .listStyle(.insetGrouped)
+        .refreshable {
+            await fetchBreeds()
+        }
+    }
+
+    @ViewBuilder
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+            Text("Failed to Load")
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            Button("Retry") {
+                Task { await fetchBreeds() }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func fetchBreeds() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            breeds = try await client.getBreeds()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+}
+
+private struct BreedRow: View {
+    let breed: Breed
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if let urlString = breed.image?.url, let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        Image(systemName: "cat")
+                            .foregroundColor(.secondary)
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: "cat")
+                            .foregroundColor(.secondary)
+                    )
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(breed.name)
+                    .font(.headline)
+                Text(breed.origin)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-    }
-}
-
-// MARK: - Path normalisation helper (used by DefaultRequestToMockMapper)
-
-struct DefaultRequestToMockMapper {
-    static func transform(request: String, using mocks: [String: [Mock]]) -> [Mock]? {
-        let components = request
-            .components(separatedBy: "/")
-            .filter { !$0.isEmpty }
-            .joined(separator: "/")
-
-        if let requestMocks = mocks[components.mockKeyNormalised] {
-            return Array(requestMocks)
-        } else {
-            return nil
-        }
-    }
-}
-
-extension String {
-    static var empty: String { "" }
-
-    /// Lowercases and wraps the string between two forward slashes.
-    var mockKeyNormalised: String {
-        var folder = self.lowercased()
-        folder = folder.starts(with: "/") ? folder : "/" + folder
-        folder = folder.last == "/" ? folder : folder + "/"
-        return folder
     }
 }

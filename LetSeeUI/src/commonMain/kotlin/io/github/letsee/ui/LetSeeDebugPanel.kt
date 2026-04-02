@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,7 @@ private val tabScreens = listOf(
 )
 
 private val tabLabels = listOf("Requests", "Scenarios", "Settings")
+private val tabTestTags = listOf("letsee_tab_requests", "letsee_tab_scenarios", "letsee_tab_settings")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,6 +74,7 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
 
     LetSeeTheme {
         Scaffold(
+            modifier = Modifier.testTag("letsee_debug_panel"),
             topBar = {
                 TopAppBar(
                     title = {
@@ -84,9 +87,9 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
                     actions = {
                         IconButton(
                             onClick = onClose,
-                            modifier = Modifier.semantics {
-                                contentDescription = "Close debug panel"
-                            },
+                            modifier = Modifier
+                                .semantics { contentDescription = "Close debug panel" }
+                                .testTag("letsee_close_button"),
                         ) {
                             Text(
                                 text = "X",
@@ -133,9 +136,9 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
                                         },
                                     )
                                 },
-                                modifier = Modifier.semantics {
-                                    contentDescription = "$label tab"
-                                },
+                                modifier = Modifier
+                                    .semantics { contentDescription = "$label tab" }
+                                    .testTag(tabTestTags[index]),
                             )
                         }
                     }
@@ -209,9 +212,9 @@ private fun JsonDetailContent(
                 navigationIcon = {
                     TextButton(
                         onClick = onBack,
-                        modifier = Modifier.semantics {
-                            contentDescription = "Navigate back from JSON detail"
-                        },
+                        modifier = Modifier
+                            .semantics { contentDescription = "Navigate back" }
+                            .testTag("letsee_back_button"),
                     ) {
                         Text(
                             text = "\u2190 Back",
@@ -232,7 +235,10 @@ private fun JsonDetailContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            JsonViewer(json = json)
+            JsonViewer(
+                json = json,
+                modifier = Modifier.testTag("letsee_json_viewer"),
+            )
         }
     }
 }

@@ -61,7 +61,9 @@ fun MockPickerScreen(
                 navigationIcon = {
                     TextButton(
                         onClick = onBack,
-                        modifier = Modifier.testTag("mock_picker_back"),
+                        modifier = Modifier
+                            .testTag("mock_picker_back")
+                            .semantics { contentDescription = "Navigate back" },
                     ) {
                         Text(
                             text = "\u2190 Back",
@@ -84,7 +86,7 @@ fun MockPickerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .testTag("mock_picker_list"),
+                .testTag("letsee_mock_picker"),
             verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 horizontal = 16.dp,
@@ -149,7 +151,16 @@ private fun MockRow(
             .fillMaxWidth()
             .clickable(onClick = onTap)
             .testTag("mock_row_${mock.name}")
-            .semantics { contentDescription = "Mock ${mock.displayName}" },
+            .semantics {
+                val type = when (mock) {
+                    is Mock.SUCCESS -> "success"
+                    is Mock.FAILURE -> "failure"
+                    is Mock.ERROR -> "error"
+                    is Mock.LIVE -> "live"
+                    is Mock.CANCEL -> "cancel"
+                }
+                contentDescription = "Mock: ${mock.displayName}, category: $type"
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
@@ -180,7 +191,9 @@ private fun MockRow(
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
                     onClick = onViewJson,
-                    modifier = Modifier.testTag("view_json_${mock.name}"),
+                    modifier = Modifier
+                        .testTag("view_json_${mock.name}")
+                        .semantics { contentDescription = "View JSON for ${mock.displayName}" },
                 ) {
                     Text(
                         text = "[JSON]",

@@ -22,6 +22,10 @@ final class LetSeeWindow: UIWindow {
         btn.layer.shadowOffset = CGSize(width: 0, height: 2)
         btn.layer.shadowRadius = 4
         btn.clipsToBounds = false
+        btn.isAccessibilityElement = true
+        btn.accessibilityLabel = "LetSee debug button"
+        btn.accessibilityTraits = .button
+        btn.accessibilityIdentifier = "letsee_floating_button"
         return btn
     }()
 
@@ -34,6 +38,7 @@ final class LetSeeWindow: UIWindow {
         lbl.layer.cornerRadius = 10
         lbl.clipsToBounds = true
         lbl.isHidden = true
+        lbl.isAccessibilityElement = false
         return lbl
     }()
 
@@ -84,6 +89,22 @@ final class LetSeeWindow: UIWindow {
     func configure(letSee: LetSeeCore.LetSee) {
         self.letSee = letSee
         startPollingBadge()
+        animateButtonAppearance()
+    }
+
+    private func animateButtonAppearance() {
+        button.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        button.alpha = 0
+        UIView.animate(
+            withDuration: 0.5,
+            delay: 0.2,
+            usingSpringWithDamping: 0.6,
+            initialSpringVelocity: 0.8,
+            options: .curveEaseOut
+        ) {
+            self.button.transform = .identity
+            self.button.alpha = 1
+        }
     }
 
     // MARK: - Touch passthrough
@@ -161,8 +182,10 @@ final class LetSeeWindow: UIWindow {
             if count > 0 {
                 self.badgeLabel.text = count > 99 ? "99+" : "\(count)"
                 self.badgeLabel.isHidden = false
+                self.button.accessibilityLabel = "LetSee debug button, \(count) pending requests"
             } else {
                 self.badgeLabel.isHidden = true
+                self.button.accessibilityLabel = "LetSee debug button"
             }
         }
     }

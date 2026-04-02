@@ -18,13 +18,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
+
+private const val BUTTON_SIZE_DP = 56
 
 @Composable
 fun LetSeeFloatingButton(
@@ -37,20 +41,33 @@ fun LetSeeFloatingButton(
     var offsetX by remember { mutableStateOf(initialOffsetX) }
     var offsetY by remember { mutableStateOf(initialOffsetY) }
 
+    val accessibilityLabel = if (pendingCount > 0) {
+        "LetSee debug button, $pendingCount pending requests"
+    } else {
+        "LetSee debug button"
+    }
+
     Box(
         modifier = modifier
             .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
             .pointerInput(Unit) {
+                val buttonSizePx = BUTTON_SIZE_DP.dp.toPx()
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    offsetX += dragAmount.x
-                    offsetY += dragAmount.y
+                    val maxX = size.width - buttonSizePx
+                    val maxY = size.height - buttonSizePx
+                    offsetX = (offsetX + dragAmount.x).coerceIn(-maxX, maxX)
+                    offsetY = (offsetY + dragAmount.y).coerceIn(-maxY, maxY)
                 }
-            },
+            }
+            .semantics(mergeDescendants = true) {
+                contentDescription = accessibilityLabel
+            }
+            .testTag("letsee_floating_button"),
     ) {
         FloatingActionButton(
             onClick = onClick,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(BUTTON_SIZE_DP.dp),
             shape = CircleShape,
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,

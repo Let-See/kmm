@@ -47,7 +47,7 @@ fun RequestListScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .testTag("request_list"),
+                .testTag("letsee_request_list"),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 horizontal = 16.dp,
@@ -77,7 +77,9 @@ private fun RequestRow(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .testTag("request_row_${requestModel.requestId}")
-            .semantics { contentDescription = "Request ${requestModel.displayName}" },
+            .semantics {
+                contentDescription = "Request: ${requestModel.displayName}, status: ${requestModel.status.name.lowercase()}"
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
@@ -159,6 +161,7 @@ private fun StatusChip(status: RequestStatus) {
     Surface(
         color = containerColor,
         shape = MaterialTheme.shapes.small,
+        modifier = Modifier.semantics { contentDescription = "Status: $label" },
     ) {
         Text(
             text = label,
