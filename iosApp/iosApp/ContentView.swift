@@ -35,20 +35,23 @@ struct ContentView: View {
             config: Configuration(isMockEnabled: true, shouldCutBaseURLFromURLsTitle: false, baseURL: "")
         )
 
+        // Wire the live request handler so "Live" forwards to the real server
+        // via a plain URLSession (bypasses LetSeeURLProtocol).
+        configureLetSeeLiveHandler()
+
         if let scenario = letSee.scenarios.first {
             letSee.requestsManager.scenarioManager.activate(scenario: scenario) { _ in }
         }
     }
 
-    // MARK: - URLProtocol-based request (callback style)
+    // MARK: - URLProtocol-based request (callback style via LetSeeKit.runDataTask)
 
     private func runSampleRequest() {
         let url = URL(string: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        let session = URLSession(configuration: LetSeeKit.sessionConfiguration)
-        let task = session.dataTask(with: request) { data, response, error in
+        let task = LetSeeKit.runDataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error {
                     statusText = "Error: \(error.localizedDescription)"

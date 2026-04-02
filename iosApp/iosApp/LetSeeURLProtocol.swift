@@ -12,15 +12,15 @@ import LetSeeCore
 ///   `OSAllocatedUnfairLock` and the URL loading system's own synchronisation guarantees.
 public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
 
+    private static let handledKey = "LetSeeURLProtocol.handled"
+
     // MARK: - Thread-safe KMM request reference
 
     /// Stores the KMM `Request` created in `startLoading()` so that `stopLoading()` can finish it.
-    private let _kmmRequestLock = OSAllocatedUnfairLock<(any Request)?>(initialState: nil)
-
-    private var kmmRequest: (any Request)? {
-        get { _kmmRequestLock.withLock { $0 } }
-        set { _kmmRequestLock.withLock { $0 = newValue } }
-    }
+    /// Also tracks whether `stopLoading()` has been called so callbacks no-op after stop.
+    private let _state = OSAllocatedUnfairLock<(request: (any Request)?, stopped: Bool)>(
+        initialState: (nil, false)
+    )
 
     // MARK: - URLProtocol overrides
 
@@ -33,8 +33,10 @@ public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     /// Allows this protocol to handle the request when mock interception is enabled.
+    /// Checks for the handled-key property to prevent recursive interception.
     public override class func canInit(with request: URLRequest) -> Bool {
-        currentLetSeeConfig().isMockEnabled
+        guard URLProtocol.property(forKey: handledKey, in: request) == nil else { return false }
+        return currentLetSeeConfig().isMockEnabled
     }
 
     /// Converts the Swift `URLRequest` to a KMM `DefaultRequest`, registers it with the KMM
@@ -44,12 +46,15 @@ public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
         let swiftRequest = self.request
         let client = self.client
 
+        guard let mutableRequest = (swiftRequest as NSURLRequest).mutableCopy() as? NSMutableURLRequest else { return }
+        URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutableRequest)
+
         let kmmRequest = toLetSeeRequest(swiftRequest)
-        self.kmmRequest = kmmRequest
+        _state.withLock { $0.request = kmmRequest }
 
         let originalURL = swiftRequest.url ?? URL(string: "https://letsee.internal")!
 
-        let result = URLAwareLetSeeResult(originalURL: originalURL, client: client, owner: self)
+        let result = URLAwareLetSeeResult(originalURL: originalURL, client: client, owner: self, stateRef: _state)
         DefaultLetSee.Companion.shared.letSee.addRequest(request: kmmRequest, listener: result)
     }
 
@@ -57,12 +62,18 @@ public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
     ///
     /// `requestsManager.finish()` is a Kotlin `suspend` function; without SKIE it exports as a
     /// completion-handler-based function. We fire-and-forget inside a `Task {}`.
+    /// Atomically reads and nils the request reference to avoid TOCTOU races.
     public override func stopLoading() {
-        guard let kmmReq = self.kmmRequest else { return }
+        let kmmReq: (any Request)? = _state.withLock { state in
+            state.stopped = true
+            let req = state.request
+            state.request = nil
+            return req
+        }
+        guard let kmmReq else { return }
         Task {
             DefaultLetSee.Companion.shared.letSee.requestsManager.finish(request: kmmReq) { _ in }
         }
-        self.kmmRequest = nil
     }
 }
 
@@ -71,20 +82,29 @@ public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
 /// A `LetSeeCore.Result` implementation that uses the original request `URL` when constructing
 /// `HTTPURLResponse` objects, ensuring the response URL matches the intercepted request.
 ///
-/// Safety note: `@unchecked Sendable` — same rationale as `LetSeeResult`: closure/state set
-/// once at construction, called exactly once from a KMM coroutine thread.
+/// Guards against double invocation with an atomic `delivered` flag, and no-ops after the
+/// owning `LetSeeURLProtocol` has called `stopLoading()`.
 private final class URLAwareLetSeeResult: LetSeeCore.Result, @unchecked Sendable {
     private let originalURL: URL
     private let client: (any URLProtocolClient)?
     private let owner: URLProtocol
+    private let stateRef: OSAllocatedUnfairLock<(request: (any Request)?, stopped: Bool)>
+    private let delivered = OSAllocatedUnfairLock(initialState: false)
 
-    init(originalURL: URL, client: (any URLProtocolClient)?, owner: URLProtocol) {
+    init(
+        originalURL: URL,
+        client: (any URLProtocolClient)?,
+        owner: URLProtocol,
+        stateRef: OSAllocatedUnfairLock<(request: (any Request)?, stopped: Bool)>
+    ) {
         self.originalURL = originalURL
         self.client = client
         self.owner = owner
+        self.stateRef = stateRef
     }
 
     func success(response: any Response) {
+        guard markDelivered() else { return }
         let (httpResponse, data) = toURLResponse(response, originalURL: originalURL)
         if let httpResponse {
             client?.urlProtocol(owner, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
@@ -94,6 +114,7 @@ private final class URLAwareLetSeeResult: LetSeeCore.Result, @unchecked Sendable
     }
 
     func failure(error: any Response) {
+        guard markDelivered() else { return }
         let nsError = NSError(
             domain: "LetSee",
             code: Int(error.responseCode),
@@ -102,7 +123,18 @@ private final class URLAwareLetSeeResult: LetSeeCore.Result, @unchecked Sendable
             ]
         )
         client?.urlProtocol(owner, didFailWithError: nsError)
-        client?.urlProtocolDidFinishLoading(owner)
+    }
+
+    /// Returns `true` the first time it is called, `false` on subsequent calls.
+    /// Also returns `false` if the owning protocol has already stopped.
+    private func markDelivered() -> Bool {
+        let stopped = stateRef.withLock { $0.stopped }
+        guard !stopped else { return false }
+        return delivered.withLock { alreadySent in
+            guard !alreadySent else { return false }
+            alreadySent = true
+            return true
+        }
     }
 }
 

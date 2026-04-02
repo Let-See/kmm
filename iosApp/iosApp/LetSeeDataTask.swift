@@ -9,8 +9,8 @@ public extension LetSeeKit {
     ///
     /// Behaviour mirrors the original iOS `LetSee.runDataTask`:
     /// 1. Injects the `LETSEE-LOGGER-ID` header if not already present.
-    /// 2. When mocks are enabled, creates a session with `LetSeeURLProtocol` injected and
-    ///    calls `addRequest` on the KMM engine to register the interception.
+    /// 2. When mocks are enabled, creates a session with `LetSeeURLProtocol` injected.
+    ///    Registration with the KMM engine happens inside `LetSeeURLProtocol.startLoading()`.
     /// 3. When mocks are disabled, uses `defaultSession` directly.
     ///
     /// - Parameters:
@@ -31,25 +31,23 @@ public extension LetSeeKit {
         }
 
         let session: URLSession
+        let shouldInvalidateSession: Bool
         if currentLetSeeConfig().isMockEnabled {
             let config = LetSeeKit.addLetSeeProtocol(to: defaultSession.configuration)
             session = URLSession(configuration: config)
-
-            // Register the request with the KMM engine so it appears in the request stack.
-            // `addRequest` is NOT suspend — it launches a coroutine internally and returns immediately.
-            let kmmRequest = toLetSeeRequest(mutableRequest)
-            DefaultLetSee.Companion.shared.letSee.addRequest(
-                request: kmmRequest,
-                listener: LetSeeResult { _ in
-                    // Response is delivered via URLProtocol callbacks; this listener
-                    // is intentionally a no-op for the runDataTask path.
-                }
-            )
+            shouldInvalidateSession = true
         } else {
             session = defaultSession
+            shouldInvalidateSession = false
         }
 
-        return session.dataTask(with: mutableRequest, completionHandler: completionHandler)
+        let task = session.dataTask(with: mutableRequest) { data, response, error in
+            if shouldInvalidateSession {
+                session.finishTasksAndInvalidate()
+            }
+            completionHandler(data, response, error)
+        }
+        return task
     }
 
     // MARK: - async overload

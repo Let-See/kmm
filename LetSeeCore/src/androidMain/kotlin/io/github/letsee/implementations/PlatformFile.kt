@@ -1,7 +1,9 @@
 package io.github.letsee.implementations
 
 actual fun appendToFile(path: String, text: String) {
-    java.io.File(path).appendText(text)
+    val file = java.io.File(path)
+    file.parentFile?.mkdirs()
+    file.appendText(text)
 }
 
 actual fun deleteFile(path: String) {

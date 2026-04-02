@@ -1,4 +1,5 @@
 import Foundation
+import os.lock
 import LetSeeCore
 
 // MARK: - URLRequest → KMM DefaultRequest
@@ -49,18 +50,21 @@ func toURLResponse(_ response: any Response, originalURL: URL) -> (HTTPURLRespon
 final class LetSeeResult: LetSeeCore.Result, @unchecked Sendable {
 
     private let completion: @Sendable (Swift.Result<(HTTPURLResponse?, Data?), Error>) -> Void
+    private let delivered = OSAllocatedUnfairLock(initialState: false)
 
     init(completion: @escaping @Sendable (Swift.Result<(HTTPURLResponse?, Data?), Error>) -> Void) {
         self.completion = completion
     }
 
     func success(response: any Response) {
+        guard deliverOnce() else { return }
         let fallbackURL = URL(string: "https://letsee.internal")!
         let (httpResponse, data) = toURLResponse(response, originalURL: fallbackURL)
         completion(.success((httpResponse, data)))
     }
 
     func failure(error: any Response) {
+        guard deliverOnce() else { return }
         let nsError = NSError(
             domain: "LetSee",
             code: Int(error.responseCode),
@@ -69,6 +73,14 @@ final class LetSeeResult: LetSeeCore.Result, @unchecked Sendable {
             ]
         )
         completion(.failure(nsError))
+    }
+
+    private func deliverOnce() -> Bool {
+        delivered.withLock { alreadySent in
+            guard !alreadySent else { return false }
+            alreadySent = true
+            return true
+        }
     }
 }
 

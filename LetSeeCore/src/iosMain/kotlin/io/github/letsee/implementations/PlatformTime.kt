@@ -1,10 +1,22 @@
+@file:OptIn(ExperimentalForeignApi::class)
+
 package io.github.letsee.implementations
 
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
+import platform.posix.gettimeofday
+import platform.posix.timeval
 
 actual fun currentTimeMillis(): Long {
-    return (NSDate().timeIntervalSince1970 * 1000.0).toLong()
+    return memScoped {
+        val tv = alloc<timeval>()
+        gettimeofday(tv.ptr, null)
+        (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L)
+    }
 }
 
 actual fun currentTimestamp(): String {

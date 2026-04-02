@@ -20,9 +20,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import io.github.letsee.Configuration
 import io.github.letsee.DefaultLetSee
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,7 +51,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable mocks for demonstration.
+        letSee.setMocks(path = applicationContext.filesDir.absolutePath + "/Mocks")
         letSee.setConfigurations(Configuration.default.copy(isMockEnabled = true))
 
         setContent {
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun sendSampleRequest(onResult: (String) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val result = try {
                 val request = Request.Builder()
                     .url("https://jsonplaceholder.typicode.com/todos/1")

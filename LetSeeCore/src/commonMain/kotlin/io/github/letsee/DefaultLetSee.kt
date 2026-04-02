@@ -155,7 +155,7 @@ class DefaultLetSee(
                 )
             }
             val effectiveListener = if (logger != null) {
-                logger.logRequest(requestWithHeader)
+                runCatching { logger.logRequest(requestWithHeader) }
                 LoggingResult(listener, logger, requestWithHeader, currentTimeMillis())
             } else {
                 listener
