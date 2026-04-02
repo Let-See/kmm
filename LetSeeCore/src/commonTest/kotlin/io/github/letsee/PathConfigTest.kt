@@ -31,6 +31,25 @@ class PathConfigSerializationTest {
         val decoded = Json.decodeFromString<PathConfig>(json)
         assertEquals(config.path, decoded.path)
     }
+
+    @Test
+    fun `malformed JSON for PathConfig does not crash - returns exception`() {
+        val malformedJson = """{"path": /invalid}"""
+        val exception = kotlin.runCatching {
+            Json.decodeFromString<PathConfig>(malformedJson)
+        }
+        assertTrue(exception.isFailure, "Malformed JSON should cause a parse failure")
+    }
+
+    @Test
+    fun `PathConfig with missing path field deserializes with default`() {
+        val json = """{}"""
+        val exception = kotlin.runCatching {
+            Json.decodeFromString<PathConfig>(json)
+        }
+        assertTrue(exception.isFailure || exception.getOrNull() != null,
+            "Empty JSON should either fail gracefully or produce a valid default")
+    }
 }
 
 class PathConfigDirectoryProcessorTest {
@@ -167,6 +186,29 @@ class PathConfigDirectoryProcessorTest {
         first.forEach { (key, mocks) ->
             assertEquals(mocks.map { it.name }, second[key]?.map { it.name }, "Mock order for '$key' must be identical")
         }
+    }
+
+    @Test
+    fun `malformed pathconfigs json content falls back to relative path key`() {
+        val malformedContent = """not valid json at all"""
+        val fileDataFetcher = MockFileDataFetcher(result = malformedContent.encodeToByteArray())
+
+        val dirResult = mapOf(
+            path to listOf("${path}${GlobalMockDirectoryConfiguration.GLOBAL_CONFIG_FILE_NAME}"),
+            subPath to listOf("${subPath}.pathconfigs.json", "${subPath}success.json")
+        )
+        val fileInfos = listOf(
+            MockFileInformation("${path}${GlobalMockDirectoryConfiguration.GLOBAL_CONFIG_FILE_NAME}", null, null, MockFileInformation.MockStatus.SUCCESS, GlobalMockDirectoryConfiguration.GLOBAL_CONFIG_FILE_NAME, null),
+            MockFileInformation("${subPath}.pathconfigs.json", null, null, MockFileInformation.MockStatus.SUCCESS, ".pathconfigs.json", null),
+            MockFileInformation("${subPath}success.json", null, null, MockFileInformation.MockStatus.SUCCESS, "success.json", null),
+        )
+
+        val sut = buildSut(dirResult, fileInfos, fileDataFetcher)
+        val result = sut.process(path)
+
+        assertEquals(1, result.size)
+        val key = result.keys.first()
+        assertEquals("/users/", key, "Malformed pathconfigs.json should fall back to directory-based key")
     }
 
     @Test

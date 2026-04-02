@@ -6,6 +6,7 @@ serialization = "1.10.0"
 okhttp = "4.12.0"
 composeBom = "2026.03.00"
 activityCompose = "1.13.0"
+composeMultiplatform = "1.10.3" # CMP — compatible with Kotlin 2.3.20
 skie = "0.10.10"
 # App SDK levels. LetSeeCore library uses minSdk = 23 (broader API range) — see LetSeeCore/build.gradle.kts.
 minSdk = "24"
@@ -24,6 +25,7 @@ compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material = { module = "androidx.compose.material:material" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -32,4 +34,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 skie = { id = "co.touchlab.skie", version.ref = "skie" }

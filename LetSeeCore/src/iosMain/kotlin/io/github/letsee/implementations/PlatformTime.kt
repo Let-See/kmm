@@ -15,7 +15,7 @@ actual fun currentTimeMillis(): Long {
     return memScoped {
         val tv = alloc<timeval>()
         gettimeofday(tv.ptr, null)
-        (tv.tv_sec * 1000L) + (tv.tv_usec / 1000L)
+        (tv.tv_sec.toLong() * 1000L) + (tv.tv_usec.toLong() / 1000L)
     }
 }
 

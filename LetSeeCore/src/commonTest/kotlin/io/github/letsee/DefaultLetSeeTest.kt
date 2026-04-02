@@ -283,6 +283,25 @@ class DefaultLetSeeTest {
     }
 
     @Test
+    fun `URL-encoded path segment does not falsely match unencoded path`() = runTest {
+        val sut = letSeeWith(mapOf("/api/users/admin/" to usersMocks))
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/users%2Fadmin/profile")
+        sut.addRequest(request, MockResult())
+        val received = capturingManager.awaitAccept()
+        assertTrue(received?.first()?.mocks?.isEmpty() == true,
+            "URL-encoded %2F should not be treated as a path separator")
+    }
+
+    @Test
+    fun `unicode characters in path segment`() = runTest {
+        val sut = letSeeWith(mapOf(usersKey to usersMocks))
+        val request = DefaultRequest(emptyMap(), "GET", "https://example.com", path = "/api/用户/")
+        sut.addRequest(request, MockResult())
+        val received = capturingManager.awaitAccept()
+        assertTrue(received?.first()?.mocks?.isEmpty() == true)
+    }
+
+    @Test
     fun `deactivateScenario clears active scenario`() = runTest {
         val sut = letSeeWith(emptyMap())
         val scenario = Scenario("test-scenario", listOf(Mock.LIVE))

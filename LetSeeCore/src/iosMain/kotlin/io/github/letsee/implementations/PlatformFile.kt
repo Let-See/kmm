@@ -2,6 +2,8 @@
 
 package io.github.letsee.implementations
 
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.cstr
 import platform.Foundation.NSFileManager
 import platform.posix.fclose
 import platform.posix.fopen
@@ -16,9 +18,11 @@ actual fun appendToFile(path: String, text: String) {
     if (!fm.fileExistsAtPath(path)) {
         fm.createFileAtPath(path, contents = null, attributes = null)
     }
-    val file = fopen(path, "a") ?: return
-    fputs(text, file)
-    fclose(file)
+    memScoped {
+        val file = fopen(path.cstr.ptr, "a".cstr.ptr) ?: return
+        fputs(text.cstr.ptr, file)
+        fclose(file)
+    }
 }
 
 actual fun deleteFile(path: String) {

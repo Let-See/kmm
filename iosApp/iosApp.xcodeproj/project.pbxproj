@@ -10,9 +10,11 @@
 		058557BB273AAA24004C7B11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557BA273AAA24004C7B11 /* Assets.xcassets */; };
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
+		43A9D0002D11200100A1B2C3 /* LetSeeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A9D0102D11200100A1B2C3 /* LetSeeBridge.swift */; };
 		43A9D0012D11200100A1B2C3 /* LetSeeSessionConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A9D0112D11200100A1B2C3 /* LetSeeSessionConfiguration.swift */; };
 		43A9D0022D11200100A1B2C3 /* LetSeeDataTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A9D0122D11200100A1B2C3 /* LetSeeDataTask.swift */; };
 		43A9D0032D11200100A1B2C3 /* LetSeeLiveHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A9D0132D11200100A1B2C3 /* LetSeeLiveHandler.swift */; };
+		43A9D0042D11200100A1B2C3 /* LetSeeURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43A9D0142D11200100A1B2C3 /* LetSeeURLProtocol.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 		F804493C29C7237000CFE188 /* Scenarios in Resources */ = {isa = PBXBuildFile; fileRef = F804493B29C7237000CFE188 /* Scenarios */; };
 		F839DA2029BB9288009C23C6 /* somejson.json in Resources */ = {isa = PBXBuildFile; fileRef = F839DA1F29BB921C009C23C6 /* somejson.json */; };
@@ -36,9 +38,11 @@
 		058557BA273AAA24004C7B11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2152FB032600AC8F00CF470E /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
+		43A9D0102D11200100A1B2C3 /* LetSeeBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeBridge.swift; sourceTree = "<group>"; };
 		43A9D0112D11200100A1B2C3 /* LetSeeSessionConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeSessionConfiguration.swift; sourceTree = "<group>"; };
 		43A9D0122D11200100A1B2C3 /* LetSeeDataTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeDataTask.swift; sourceTree = "<group>"; };
 		43A9D0132D11200100A1B2C3 /* LetSeeLiveHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeLiveHandler.swift; sourceTree = "<group>"; };
+		43A9D0142D11200100A1B2C3 /* LetSeeURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetSeeURLProtocol.swift; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -90,9 +94,11 @@
 				F84B906129C101DA0023B5D9 /* Mocks */,
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
+				43A9D0102D11200100A1B2C3 /* LetSeeBridge.swift */,
 				43A9D0112D11200100A1B2C3 /* LetSeeSessionConfiguration.swift */,
 				43A9D0122D11200100A1B2C3 /* LetSeeDataTask.swift */,
 				43A9D0132D11200100A1B2C3 /* LetSeeLiveHandler.swift */,
+				43A9D0142D11200100A1B2C3 /* LetSeeURLProtocol.swift */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
@@ -205,9 +211,11 @@
 			files = (
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
+				43A9D0002D11200100A1B2C3 /* LetSeeBridge.swift in Sources */,
 				43A9D0012D11200100A1B2C3 /* LetSeeSessionConfiguration.swift in Sources */,
 				43A9D0022D11200100A1B2C3 /* LetSeeDataTask.swift in Sources */,
 				43A9D0032D11200100A1B2C3 /* LetSeeLiveHandler.swift in Sources */,
+				43A9D0042D11200100A1B2C3 /* LetSeeURLProtocol.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,7 +273,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -320,7 +328,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

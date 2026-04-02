@@ -130,6 +130,52 @@ class MocksOrderingTests {
     }
 
     @Test
+    fun `keys are sorted alphabetically case-insensitive across multiple directories`() {
+        val rootPath = "/ordering-test/"
+        val zDir = "${rootPath}Zebra/"
+        val aDir = "${rootPath}alpha/"
+        val mDir = "${rootPath}Mango/"
+
+        val globalInfo = MockFileInformation(
+            "${rootPath}.ls.global.json", null, null,
+            MockFileInformation.MockStatus.SUCCESS, ".ls.global.json", null
+        )
+        val zFileInfo = MockFileInformation(
+            "${zDir}success.json", null, null,
+            MockFileInformation.MockStatus.SUCCESS, "success.json", null
+        )
+        val aFileInfo = MockFileInformation(
+            "${aDir}success.json", null, null,
+            MockFileInformation.MockStatus.SUCCESS, "success.json", null
+        )
+        val mFileInfo = MockFileInformation(
+            "${mDir}success.json", null, null,
+            MockFileInformation.MockStatus.SUCCESS, "success.json", null
+        )
+
+        val zMock = Mock.SUCCESS("z-success", DefaultResponse(200u, 200u, null, null, null, emptyMap()), zFileInfo)
+        val aMock = Mock.SUCCESS("a-success", DefaultResponse(200u, 200u, null, null, null, emptyMap()), aFileInfo)
+        val mMock = Mock.SUCCESS("m-success", DefaultResponse(200u, 200u, null, null, null, emptyMap()), mFileInfo)
+
+        val files = mapOf(
+            rootPath to listOf(".ls.global.json"),
+            zDir to listOf("success.json"),
+            aDir to listOf("success.json"),
+            mDir to listOf("success.json")
+        )
+        val fileInfos = listOf(globalInfo, zFileInfo, aFileInfo, mFileInfo)
+        val mockResults = listOf(zMock, aMock, mMock)
+
+        val (sut, root) = buildOrderingProcessor(files, fileInfos, mockResults)
+        val result = sut.process(root)
+
+        assertEquals(3, result.size)
+        val keys = result.keys.toList()
+        assertEquals(keys, keys.sortedBy { it.lowercase() },
+            "Keys should be sorted alphabetically (case-insensitive), got: $keys")
+    }
+
+    @Test
     fun `processing same directory twice produces identical mock order`() {
         val (sut1, rootPath1) = buildOrderingProcessor(files, fileInfos, mockResults)
         val (sut2, rootPath2) = buildOrderingProcessor(files, fileInfos, mockResults)
