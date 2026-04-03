@@ -47,37 +47,26 @@ fallbackFromEnv("ossrhUsername", "OSSRH_USERNAME")
 fallbackFromEnv("ossrhPassword", "OSSRH_PASSWORD")
 fallbackFromEnv("centralPortalUsername", "CENTRAL_PORTAL_USERNAME")
 fallbackFromEnv("centralPortalPassword", "CENTRAL_PORTAL_PASSWORD")
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
 fun getExtraString(name: String) = ext[name]?.toString()
 fun firstNonBlank(vararg values: String?): String? = values.firstOrNull { !it.isNullOrBlank() }
 
 publishing {
-    // Configure maven central repository
     repositories {
         maven {
-            name = "centralPortalOssrhCompat"
-            // Sonatype Central's OSSRH Staging API compatibility endpoint.
-            setUrl("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
-            credentials {
-                // Prefer Central Portal user-token credentials; fall back to legacy OSSRH keys.
-                username = firstNonBlank(
-                    getExtraString("centralPortalUsername"),
-                    getExtraString("ossrhUsername")
-                )
-                password = firstNonBlank(
-                    getExtraString("centralPortalPassword"),
-                    getExtraString("ossrhPassword")
-                )
-            }
+            name = "staging"
+            setUrl(rootProject.layout.buildDirectory.dir("staging-deploy"))
         }
     }
 
     // Configure all publications
     publications.withType<MavenPublication> {
-        artifact(javadocJar.get())
+        // Each publication gets its own javadoc jar to avoid signing task conflicts
+        val pubName = this.name
+        val javadocJar = tasks.register("${pubName}JavadocJar", Jar::class) {
+            archiveClassifier.set("javadoc")
+            archiveAppendix.set(pubName)
+        }
+        artifact(javadocJar)
         groupId = publishGroupId
         version = publishVersion
         artifactId = project.name
