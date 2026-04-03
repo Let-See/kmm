@@ -3,10 +3,13 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlin.compose)
+    id("convention.publication")
 }
 
 kotlin {
     androidTarget {
+        publishLibraryVariants("release")
+
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
