@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import io.github.letsee.interfaces.LetSee
 import io.github.letsee.ui.components.JsonViewer
 import io.github.letsee.ui.navigation.DebugScreen
@@ -59,12 +60,9 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
         currentScreen = screen
     }
 
-    fun navigateBack(): Boolean {
-        return if (backStack.isNotEmpty()) {
+    fun navigateBack() {
+        if (backStack.isNotEmpty()) {
             currentScreen = backStack.removeLast()
-            true
-        } else {
-            false
         }
     }
 
@@ -76,169 +74,185 @@ fun LetSeeDebugPanel(letSee: LetSee, onClose: () -> Unit = {}) {
         Scaffold(
             modifier = Modifier.testTag("letsee_debug_panel"),
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "LetSee Debug",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = onClose,
-                            modifier = Modifier
-                                .semantics { contentDescription = "Close debug panel" }
-                                .testTag("letsee_close_button"),
-                        ) {
-                            Text(
-                                text = "X",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    ),
-                )
-            },
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            ) {
-                if (isOnTabRoot) {
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        modifier = Modifier.fillMaxWidth(),
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ) {
-                        tabLabels.forEachIndexed { index, label ->
-                            Tab(
-                                selected = selectedTab == index,
-                                onClick = {
-                                    selectedTab = index
-                                    backStack.clear()
-                                    currentScreen = tabScreens[index]
-                                },
-                                text = {
+                // Single top bar that adapts per screen — no nested Scaffolds.
+                Column {
+                    when (val screen = currentScreen) {
+                        is DebugScreen.RequestList,
+                        is DebugScreen.Scenarios,
+                        is DebugScreen.Settings -> {
+                            TopAppBar(
+                                title = {
                                     Text(
-                                        text = label,
-                                        fontWeight = if (selectedTab == index) {
-                                            FontWeight.Bold
-                                        } else {
-                                            FontWeight.Normal
-                                        },
+                                        text = "LetSee Debug",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
                                     )
                                 },
-                                modifier = Modifier
-                                    .semantics { contentDescription = "$label tab" }
-                                    .testTag(tabTestTags[index]),
-                            )
-                        }
-                    }
-                }
-
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    when (val screen = currentScreen) {
-                        is DebugScreen.RequestList -> {
-                            RequestListScreen(
-                                requestListStateHolder = components.requestListStateHolder,
-                                onRequestSelected = { request ->
-                                    navigateTo(DebugScreen.MockPicker(request))
+                                actions = {
+                                    IconButton(
+                                        onClick = onClose,
+                                        modifier = Modifier
+                                            .semantics { contentDescription = "Close debug panel" }
+                                            .testTag("letsee_close_button"),
+                                    ) {
+                                        Text(
+                                            text = "X",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                    }
                                 },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                ),
                             )
-                        }
-
-                        is DebugScreen.Scenarios -> {
-                            ScenariosScreen(
-                                scenarioListStateHolder = components.scenarioListStateHolder,
-                            )
-                        }
-
-                        is DebugScreen.Settings -> {
-                            SettingsScreen(
-                                settingsStateHolder = components.settingsStateHolder,
-                            )
+                            TabRow(
+                                selectedTabIndex = selectedTab,
+                                modifier = Modifier.fillMaxWidth(),
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                            ) {
+                                tabLabels.forEachIndexed { index, label ->
+                                    Tab(
+                                        selected = selectedTab == index,
+                                        onClick = {
+                                            selectedTab = index
+                                            backStack.clear()
+                                            currentScreen = tabScreens[index]
+                                        },
+                                        text = {
+                                            Text(
+                                                text = label,
+                                                fontWeight = if (selectedTab == index) {
+                                                    FontWeight.Bold
+                                                } else {
+                                                    FontWeight.Normal
+                                                },
+                                            )
+                                        },
+                                        modifier = Modifier
+                                            .semantics { contentDescription = "$label tab" }
+                                            .testTag(tabTestTags[index]),
+                                    )
+                                }
+                            }
                         }
 
                         is DebugScreen.MockPicker -> {
-                            MockPickerScreen(
-                                requestUIModel = screen.requestUIModel,
-                                requestListStateHolder = components.requestListStateHolder,
-                                onMockSelected = { navigateBack() },
-                                onViewJson = { mock ->
-                                    mock.formatted?.let { json ->
-                                        navigateTo(DebugScreen.JsonDetail(json))
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        text = screen.requestUIModel.displayName,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
+                                navigationIcon = {
+                                    TextButton(
+                                        onClick = { navigateBack() },
+                                        modifier = Modifier
+                                            .testTag("mock_picker_back")
+                                            .semantics { contentDescription = "Navigate back" },
+                                    ) {
+                                        Text(
+                                            text = "\u2190 Back",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
                                     }
                                 },
-                                onBack = { navigateBack() },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                ),
                             )
                         }
 
                         is DebugScreen.JsonDetail -> {
-                            JsonDetailContent(
-                                json = screen.json,
-                                onBack = { navigateBack() },
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        text = "JSON Detail",
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                },
+                                navigationIcon = {
+                                    TextButton(
+                                        onClick = { navigateBack() },
+                                        modifier = Modifier
+                                            .semantics { contentDescription = "Navigate back" }
+                                            .testTag("letsee_back_button"),
+                                    ) {
+                                        Text(
+                                            text = "\u2190 Back",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                ),
                             )
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun JsonDetailContent(
-    json: String,
-    onBack: () -> Unit,
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "JSON Detail",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .semantics { contentDescription = "Navigate back" }
-                            .testTag("letsee_back_button"),
-                    ) {
-                        Text(
-                            text = "\u2190 Back",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
+            },
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            ) {
+                when (val screen = currentScreen) {
+                    is DebugScreen.RequestList -> {
+                        RequestListScreen(
+                            requestListStateHolder = components.requestListStateHolder,
+                            onRequestSelected = { request ->
+                                navigateTo(DebugScreen.MockPicker(request))
+                            },
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            )
-        },
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            JsonViewer(
-                json = json,
-                modifier = Modifier.testTag("letsee_json_viewer"),
-            )
+
+                    is DebugScreen.Scenarios -> {
+                        ScenariosScreen(
+                            scenarioListStateHolder = components.scenarioListStateHolder,
+                        )
+                    }
+
+                    is DebugScreen.Settings -> {
+                        SettingsScreen(
+                            settingsStateHolder = components.settingsStateHolder,
+                        )
+                    }
+
+                    is DebugScreen.MockPicker -> {
+                        MockPickerScreen(
+                            requestUIModel = screen.requestUIModel,
+                            requestListStateHolder = components.requestListStateHolder,
+                            onMockSelected = { navigateBack() },
+                            onViewJson = { mock ->
+                                mock.formatted?.let { json ->
+                                    navigateTo(DebugScreen.JsonDetail(json))
+                                }
+                            },
+                        )
+                    }
+
+                    is DebugScreen.JsonDetail -> {
+                        JsonViewer(
+                            json = screen.json,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("letsee_json_viewer"),
+                        )
+                    }
+                }
+            }
         }
     }
 }

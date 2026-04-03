@@ -223,7 +223,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :LetSeeCore:embedAndSignAppleFrameworkForXcode :LetSeeUI:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :LetSeeUI:embedAndSignAppleFrameworkForXcode\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -375,7 +375,6 @@
 			ENABLE_PREVIEWS = YES;
 			FRAMEWORK_SEARCH_PATHS = (
 				"$(inherited)",
-				"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				"$(SRCROOT)/../LetSeeUI/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 			);
 			INFOPLIST_FILE = iosApp/Info.plist;
@@ -385,8 +384,6 @@
 			);
 			OTHER_LDFLAGS = (
 				"$(inherited)",
-				"-framework",
-				LetSeeCore,
 				"-framework",
 				LetSeeUI,
 			);
@@ -406,7 +403,6 @@
 			ENABLE_PREVIEWS = YES;
 			FRAMEWORK_SEARCH_PATHS = (
 				"$(inherited)",
-				"$(SRCROOT)/../LetSeeCore/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 				"$(SRCROOT)/../LetSeeUI/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)",
 			);
 			INFOPLIST_FILE = iosApp/Info.plist;
@@ -416,8 +412,6 @@
 			);
 			OTHER_LDFLAGS = (
 				"$(inherited)",
-				"-framework",
-				LetSeeCore,
 				"-framework",
 				LetSeeUI,
 			);

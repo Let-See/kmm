@@ -16,7 +16,7 @@ extension LetSeeKit {
     /// - Parameters:
     ///   - letSee: The KMM `LetSee` instance (typically `DefaultLetSee.Companion.shared.letSee`).
     ///   - windowScene: The scene to attach to. Falls back to the first connected `UIWindowScene`.
-    static func installDebugUI(letSee: LetSeeCore.LetSee, in windowScene: UIWindowScene? = nil) {
+    static func installDebugUI(letSee: any LetSee, in windowScene: UIWindowScene? = nil) {
         let scene = windowScene
             ?? UIApplication.shared.connectedScenes
                 .compactMap({ $0 as? UIWindowScene })

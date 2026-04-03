@@ -79,12 +79,12 @@ public final class LetSeeURLProtocol: URLProtocol, @unchecked Sendable {
 
 // MARK: - URLAwareLetSeeResult
 
-/// A `LetSeeCore.Result` implementation that uses the original request `URL` when constructing
+/// A `LetSeeUI.Result` implementation that uses the original request `URL` when constructing
 /// `HTTPURLResponse` objects, ensuring the response URL matches the intercepted request.
 ///
 /// Guards against double invocation with an atomic `delivered` flag, and no-ops after the
 /// owning `LetSeeURLProtocol` has called `stopLoading()`.
-private final class URLAwareLetSeeResult: LetSeeCore.Result, @unchecked Sendable {
+private final class URLAwareLetSeeResult: LetSeeUI.Result, @unchecked Sendable {
     private let originalURL: URL
     private let client: (any URLProtocolClient)?
     private let owner: URLProtocol

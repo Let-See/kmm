@@ -47,7 +47,7 @@ func toURLResponse(_ response: any Response, originalURL: URL) -> (HTTPURLRespon
 /// Safety note: marked `@unchecked Sendable` because the closure is set once at
 /// construction time and invoked exactly once from an arbitrary KMM coroutine thread.
 /// The closure itself is declared `@Sendable` to enforce that its captures are safe.
-final class LetSeeResult: LetSeeCore.Result, @unchecked Sendable {
+final class LetSeeResult: LetSeeUI.Result, @unchecked Sendable {
 
     private let completion: @Sendable (Swift.Result<(HTTPURLResponse?, Data?), Error>) -> Void
     private let delivered = OSAllocatedUnfairLock(initialState: false)

@@ -43,7 +43,7 @@ final class LetSeeWindow: UIWindow {
 
     // MARK: - State
 
-    private var letSee: LetSeeCore.LetSee?
+    private var letSee: (any LetSee)?
     private var pollTimer: Timer?
 
     // MARK: - Init
@@ -85,7 +85,7 @@ final class LetSeeWindow: UIWindow {
 
     // MARK: - Configuration
 
-    func configure(letSee: LetSeeCore.LetSee) {
+    func configure(letSee: any LetSee) {
         self.letSee = letSee
         startPollingBadge()
         animateButtonAppearance()
@@ -109,6 +109,10 @@ final class LetSeeWindow: UIWindow {
     // MARK: - Touch passthrough
 
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        // When the debug panel is presented, pass all touches through to it.
+        if rootViewController?.presentedViewController != nil {
+            return true
+        }
         guard let rootView = rootViewController?.view else { return false }
         let buttonFrame = button.convert(button.bounds, to: rootView)
         let hitArea = buttonFrame.insetBy(dx: -8, dy: -8)
@@ -120,7 +124,12 @@ final class LetSeeWindow: UIWindow {
     @objc private func buttonTapped() {
         guard let letSee = letSee else { return }
         let composeVC = ComposeEntryPointKt.LetSeeDebugViewController(letSee: letSee)
-        composeVC.modalPresentationStyle = .fullScreen
+        composeVC.modalPresentationStyle = .pageSheet
+        if let sheet = composeVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+            sheet.prefersScrollingExpandsWhenScrolledToEdge = true
+        }
         rootViewController?.present(composeVC, animated: true)
     }
 
