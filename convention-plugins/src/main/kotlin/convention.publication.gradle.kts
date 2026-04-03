@@ -106,7 +106,8 @@ signing {
     when {
         // Preferred for CI: use ASCII-armored private key directly from env/secret.
         !inMemoryKey.isNullOrBlank() && !password.isNullOrBlank() -> {
-            useInMemoryPgpKeys(keyId, inMemoryKey, password)
+            // Avoid key-id filtering issues in CI; use whatever key is provided.
+            useInMemoryPgpKeys(inMemoryKey, password)
             sign(publishing.publications)
         }
         // Backward-compatible legacy ring-file flow.
