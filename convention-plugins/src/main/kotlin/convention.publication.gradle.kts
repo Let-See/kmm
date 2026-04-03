@@ -33,6 +33,7 @@ if (secretPropsFile.exists()) {
     ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
     ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
     ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+    ext["signing.key"] = System.getenv("SIGNING_KEY")
     ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
     ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
     ext["centralPortalUsername"] = System.getenv("CENTRAL_PORTAL_USERNAME")
@@ -100,7 +101,18 @@ signing {
     val keyId = findProperty("signing.keyId") as? String
     val password = findProperty("signing.password") as? String
     val ringFile = findProperty("signing.secretKeyRingFile") as? String
-    if (listOf(keyId, password, ringFile).all { !it.isNullOrBlank() }) {
-        sign(publishing.publications)
+    val inMemoryKey = findProperty("signing.key") as? String
+
+    when {
+        // Preferred for CI: use ASCII-armored private key directly from env/secret.
+        !inMemoryKey.isNullOrBlank() && !password.isNullOrBlank() -> {
+            useInMemoryPgpKeys(keyId, inMemoryKey, password)
+            sign(publishing.publications)
+        }
+        // Backward-compatible legacy ring-file flow.
+        listOf(keyId, password, ringFile).all { !it.isNullOrBlank() } -> {
+            // Gradle picks up signing.secretKeyRingFile/signing.keyId/signing.password properties.
+            sign(publishing.publications)
+        }
     }
 }
