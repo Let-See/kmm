@@ -13,6 +13,8 @@ ext["signing.secretKeyRingFile"] = null
 ext["signing.key"] = null
 ext["ossrhUsername"] = null
 ext["ossrhPassword"] = null
+ext["centralPortalUsername"] = null
+ext["centralPortalPassword"] = null
 
 val publishVersion: String by rootProject
 val publishGroupId: String by rootProject
@@ -33,6 +35,8 @@ if (secretPropsFile.exists()) {
     ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
     ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
     ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
+    ext["centralPortalUsername"] = System.getenv("CENTRAL_PORTAL_USERNAME")
+    ext["centralPortalPassword"] = System.getenv("CENTRAL_PORTAL_PASSWORD")
 }
 //val javadocJar by tasks.registering(Jar::class) {
 //    archiveClassifier.set("javadoc")
@@ -44,11 +48,15 @@ publishing {
     // Configure maven central repository
     repositories {
         maven {
-            name = "sonatype"
-            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            name = "centralPortalOssrhCompat"
+            // Sonatype Central's OSSRH Staging API compatibility endpoint.
+            setUrl("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
             credentials {
-                username = getExtraString("ossrhUsername")
-                password = getExtraString("ossrhPassword")
+                // Prefer Central Portal user-token credentials; fall back to legacy OSSRH keys.
+                username = getExtraString("centralPortalUsername")
+                    ?: getExtraString("ossrhUsername")
+                password = getExtraString("centralPortalPassword")
+                    ?: getExtraString("ossrhPassword")
             }
         }
     }
