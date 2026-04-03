@@ -19,7 +19,8 @@ ext["centralPortalPassword"] = null
 val publishVersion: String by rootProject
 val publishGroupId: String by rootProject
 
-// Grabbing secrets from local.properties file or from environment variables, which could be used on CI
+// Grabbing secrets from local.properties and environment variables (CI/local).
+// local.properties values win; missing values fall back to env.
 val secretPropsFile = project.rootProject.file("local.properties")
 if (secretPropsFile.exists()) {
     secretPropsFile.reader().use {
@@ -29,21 +30,29 @@ if (secretPropsFile.exists()) {
     }.onEach { (name, value) ->
         ext[name.toString()] = value
     }
-} else {
-    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
-    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
-    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-    ext["signing.key"] = System.getenv("SIGNING_KEY")
-    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
-    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
-    ext["centralPortalUsername"] = System.getenv("CENTRAL_PORTAL_USERNAME")
-    ext["centralPortalPassword"] = System.getenv("CENTRAL_PORTAL_PASSWORD")
 }
+
+fun fallbackFromEnv(extKey: String, envKey: String) {
+    val current = ext[extKey]?.toString()
+    if (current.isNullOrBlank()) {
+        ext[extKey] = System.getenv(envKey)
+    }
+}
+
+fallbackFromEnv("signing.keyId", "SIGNING_KEY_ID")
+fallbackFromEnv("signing.password", "SIGNING_PASSWORD")
+fallbackFromEnv("signing.secretKeyRingFile", "SIGNING_SECRET_KEY_RING_FILE")
+fallbackFromEnv("signing.key", "SIGNING_KEY")
+fallbackFromEnv("ossrhUsername", "OSSRH_USERNAME")
+fallbackFromEnv("ossrhPassword", "OSSRH_PASSWORD")
+fallbackFromEnv("centralPortalUsername", "CENTRAL_PORTAL_USERNAME")
+fallbackFromEnv("centralPortalPassword", "CENTRAL_PORTAL_PASSWORD")
 //val javadocJar by tasks.registering(Jar::class) {
 //    archiveClassifier.set("javadoc")
 //}
 
 fun getExtraString(name: String) = ext[name]?.toString()
+fun firstNonBlank(vararg values: String?): String? = values.firstOrNull { !it.isNullOrBlank() }
 
 publishing {
     // Configure maven central repository
@@ -54,10 +63,14 @@ publishing {
             setUrl("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
             credentials {
                 // Prefer Central Portal user-token credentials; fall back to legacy OSSRH keys.
-                username = getExtraString("centralPortalUsername")
-                    ?: getExtraString("ossrhUsername")
-                password = getExtraString("centralPortalPassword")
-                    ?: getExtraString("ossrhPassword")
+                username = firstNonBlank(
+                    getExtraString("centralPortalUsername"),
+                    getExtraString("ossrhUsername")
+                )
+                password = firstNonBlank(
+                    getExtraString("centralPortalPassword"),
+                    getExtraString("ossrhPassword")
+                )
             }
         }
     }
