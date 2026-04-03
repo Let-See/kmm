@@ -14,5 +14,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "LetSee-KMM"
+includeBuild("convention-plugins")
+include(":LetSeeCore")
+include(":LetSeeUI")
 include(":androidApp")
-include(":LetSeeShared")

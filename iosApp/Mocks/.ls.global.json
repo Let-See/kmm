@@ -1,6 +1,10 @@
 {
     "maps": [
         {
+            "folder": "/breeds",
+            "to": "/v1"
+        },
+        {
             "folder": "/arrangements",
             "to": "/api/arrangement-manager/client-api/v2/productsummary/context"
         },

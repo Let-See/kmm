@@ -1,0 +1,17 @@
+[
+  {
+    "moduleId": "org.jetbrains.compose.ui:ui-uikit:1.10.3",
+    "file": "/Users/farshad/Documents/Develop/LetSee+multi-repo/kmm/.kotlin/metadata/kotlinTransformedCInteropMetadataLibraries/org.jetbrains.compose.ui-ui-uikit-1.10.3-uikitMain-cinterop/org.jetbrains.compose.ui_ui-uikit-cinterop-utils-Q1SrDw.klib",
+    "sourceSetName": "uikitMain"
+  },
+  {
+    "moduleId": "org.jetbrains.kotlinx:atomicfu:0.27.0",
+    "file": "/Users/farshad/Documents/Develop/LetSee+multi-repo/kmm/.kotlin/metadata/kotlinTransformedCInteropMetadataLibraries/org.jetbrains.kotlinx-atomicfu-0.27.0-iosMain-cinterop/org.jetbrains.kotlinx_atomicfu-cinterop-interop-WOkCig.klib",
+    "sourceSetName": "iosMain"
+  },
+  {
+    "moduleId": "org.jetbrains.skiko:skiko:0.9.37.4",
+    "file": "/Users/farshad/Documents/Develop/LetSee+multi-repo/kmm/.kotlin/metadata/kotlinTransformedCInteropMetadataLibraries/org.jetbrains.skiko-skiko-0.9.37.4-iosMain-cinterop/org.jetbrains.skiko_skiko-cinterop-uikit-TtyIcw.klib",
+    "sourceSetName": "iosMain"
+  }
+]

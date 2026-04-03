@@ -1,0 +1,87 @@
+[
+  {
+    "id": "abys",
+    "name": "Abyssinian",
+    "description": "The Abyssinian is easy to care for, and a joy to have in your home. They're affectionate cats and love both people and other animals.",
+    "origin": "Egypt",
+    "temperament": "Active, Energetic, Independent, Intelligent, Gentle",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Abyssinian_(cat)",
+    "life_span": "14 - 15",
+    "weight": {
+      "imperial": "7 - 10",
+      "metric": "3 - 5"
+    },
+    "image": {
+      "id": "0XYvRd7oD",
+      "url": "https://cdn2.thecatapi.com/images/0XYvRd7oD.jpg"
+    }
+  },
+  {
+    "id": "beng",
+    "name": "Bengal",
+    "description": "Bengals are a lot of fun to live with, but they're definitely not the cat for everyone. Extremely intelligent, curious and active, they demand a lot of interaction.",
+    "origin": "United States",
+    "temperament": "Alert, Agile, Energetic, Demanding, Intelligent",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Bengal_(cat)",
+    "life_span": "12 - 15",
+    "weight": {
+      "imperial": "6 - 12",
+      "metric": "3 - 7"
+    },
+    "image": {
+      "id": "O3btzLlsO",
+      "url": "https://cdn2.thecatapi.com/images/O3btzLlsO.jpg"
+    }
+  },
+  {
+    "id": "siam",
+    "name": "Siamese",
+    "description": "While Siamese cats are extremely fond of their people, they will follow you around and supervise your every move, being talkative and opinionated.",
+    "origin": "Thailand",
+    "temperament": "Active, Agile, Clever, Sociable, Loving",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Siamese_(cat)",
+    "life_span": "12 - 15",
+    "weight": {
+      "imperial": "6 - 14",
+      "metric": "3 - 5"
+    },
+    "image": {
+      "id": "ai6Jps4sx",
+      "url": "https://cdn2.thecatapi.com/images/ai6Jps4sx.jpg"
+    }
+  },
+  {
+    "id": "pers",
+    "name": "Persian",
+    "description": "Persians are sweet, gentle cats that can be playful or placid. They are very family oriented and possess a relaxed, easy-going nature.",
+    "origin": "Iran (Persia)",
+    "temperament": "Affectionate, Loyal, Gentle, Quiet, Sweet",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Persian_(cat)",
+    "life_span": "14 - 15",
+    "weight": {
+      "imperial": "9 - 14",
+      "metric": "3 - 5"
+    },
+    "image": {
+      "id": "OGTWqNNOt",
+      "url": "https://cdn2.thecatapi.com/images/OGTWqNNOt.jpg"
+    }
+  },
+  {
+    "id": "ragd",
+    "name": "Ragdoll",
+    "description": "Ragdolls love their people, greeting them at the door, following them around the house, and leaping into a lap whenever the chance arises.",
+    "origin": "United States",
+    "temperament": "Affectionate, Friendly, Gentle, Quiet, Easygoing",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Ragdoll",
+    "life_span": "12 - 17",
+    "weight": {
+      "imperial": "12 - 20",
+      "metric": "5 - 10"
+    },
+    "image": {
+      "id": "oGefY4YoG",
+      "url": "https://cdn2.thecatapi.com/images/oGefY4YoG.jpg"
+    }
+  }
+]

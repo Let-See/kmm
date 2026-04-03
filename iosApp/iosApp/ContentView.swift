@@ -1,71 +1,135 @@
 import SwiftUI
-import LetSeeShared
-class DefaultResult: LetSeeShared.Result {
-    func failure(error: Response) {
-        guard let data = error.byteResponse?.toData() else {return}
-        print("@@ error", String(data: data, encoding: .utf8))
+import LetSeeUI
+
+struct ContentView: View {
+    @State private var breeds: [Breed] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+
+    private let client = CatApiClient.shared
+
+    var body: some View {
+        NavigationView {
+            Group {
+                if isLoading && breeds.isEmpty {
+                    ProgressView("Loading breeds…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let errorMessage, breeds.isEmpty {
+                    errorView(message: errorMessage)
+                } else {
+                    breedList
+                }
+            }
+            .navigationTitle("Cat Breeds")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        Task { await fetchBreeds() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(isLoading)
+                }
+            }
+        }
+        .navigationViewStyle(.stack)
+        .task {
+            await fetchBreeds()
+        }
     }
 
-    func success(response: Response) {
-        guard let data = response.byteResponse?.toData() else {return}
-        print("@@ success", String(data: data, encoding: .utf8))
+    private var breedList: some View {
+        List(breeds) { breed in
+            NavigationLink(destination: BreedDetailView(breed: breed)) {
+                BreedRow(breed: breed)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .refreshable {
+            await fetchBreeds()
+        }
+    }
+
+    @ViewBuilder
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 48))
+                .foregroundColor(.orange)
+            Text("Failed to Load")
+                .font(.headline)
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            Button("Retry") {
+                Task { await fetchBreeds() }
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func fetchBreeds() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            breeds = try await client.getBreeds()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
     }
 }
-struct ContentView: View {
+
+private struct BreedRow: View {
+    let breed: Breed
+
     var body: some View {
-        Text("greet")
-            .onAppear(perform: {
-
-                let path = Bundle.main.url(forResource: "somejson", withExtension: "json")?.absoluteString
-                var letSee = DefaultLetSee.Companion.shared.letSee
-                letSee.setMocks(path: Bundle.main.bundlePath + "/Mocks")
-                letSee.setScenarios(path: Bundle.main.bundlePath + "/Scenarios")
-
-                if let scenario = letSee.scenarios.first {
-                    letSee.requestsManager.scenarioManager.activate(scenario: scenario) { _ in
-
+        HStack(spacing: 12) {
+            if let urlString = breed.image?.url, let url = URL(string: urlString) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        Image(systemName: "cat")
+                            .foregroundColor(.secondary)
+                    case .empty:
+                        ProgressView()
+                    @unknown default:
+                        EmptyView()
                     }
                 }
+                .frame(width: 60, height: 60)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: "cat")
+                            .foregroundColor(.secondary)
+                    )
+            }
 
-                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
-                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
-                letSee.addRequest(request: DefaultRequest(headers: [:], requestMethod: "GET", uri: "https://google.com/api/arrangement-manager/client-api/v2/productsummary/context/arrangements", path: "api/arrangement-manager/client-api/v2/productsummary/context/arrangements"), listener: DefaultResult())
-            })
+            VStack(alignment: .leading, spacing: 4) {
+                Text(breed.name)
+                    .font(.headline)
+                Text(breed.origin)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
-
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-    }
-}
-
-struct DefaultRequestToMockMapper {
-    static func transform(request: String, using mocks: [String : [Mock]]) -> [Mock]? {
-        let components = request
-            .components(separatedBy: "/")
-            .filter({!$0.isEmpty})
-            .joined(separator: "/")
-
-        if let requestMocks = mocks[components.mockKeyNormalised] {
-            return Array(requestMocks)
-        } else {
-            return nil
-        }
-    }
-}
-
-extension String {
-    static var empty: String {
-        return ""
-    }
-
-    /// LowerCases and wraps the string between two backslash
-    var mockKeyNormalised: String {
-        var folder = self.lowercased()
-        folder = folder.starts(with: "/") ? folder : "/" + folder
-        folder = folder.last == "/" ? folder : folder + "/"
-        return folder
     }
 }
