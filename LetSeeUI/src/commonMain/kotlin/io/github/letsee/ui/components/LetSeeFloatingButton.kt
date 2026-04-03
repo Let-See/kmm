@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.letsee.models.Category
@@ -53,6 +54,8 @@ import io.github.letsee.ui.RequestUIModel
 import kotlin.math.roundToInt
 
 private const val BUTTON_SIZE_DP = 56
+private val OVERLAY_MARGIN = 24.dp
+private val BUTTON_TO_CARD_SPACING = 8.dp
 
 /**
  * Floating LetSee debug button with an optional quick-access mock panel.
@@ -82,6 +85,7 @@ fun LetSeeFloatingButton(
     onClick: () -> Unit,
     onMockSelected: (Request, Mock) -> Unit = { _, _ -> },
     onInteractiveBoundsChanged: ((x: Float, y: Float, width: Float, height: Float) -> Unit)? = null,
+    viewportWidth: Dp? = null,
     modifier: Modifier = Modifier,
     initialOffsetX: Float = 0f,
     initialOffsetY: Float = 0f,
@@ -100,6 +104,12 @@ fun LetSeeFloatingButton(
     }
 
     val showQuickAccess = quickAccessRequest != null && specificMocks.isNotEmpty()
+    val quickAccessWidth = remember(viewportWidth) {
+        viewportWidth?.let {
+            (it - (OVERLAY_MARGIN * 2) - BUTTON_SIZE_DP.dp - BUTTON_TO_CARD_SPACING)
+                .coerceAtLeast(160.dp)
+        }
+    }
 
     val accessibilityLabel = if (pendingCount > 0) {
         "LetSee debug button, $pendingCount pending requests"
@@ -111,13 +121,10 @@ fun LetSeeFloatingButton(
         modifier = modifier
             .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
             .pointerInput(Unit) {
-                val buttonSizePx = BUTTON_SIZE_DP.dp.toPx()
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    val maxX = size.width - buttonSizePx
-                    val maxY = size.height - buttonSizePx
-                    offsetX = (offsetX + dragAmount.x).coerceIn(-maxX, maxX)
-                    offsetY = (offsetY + dragAmount.y).coerceIn(-maxY, maxY)
+                    offsetX += dragAmount.x
+                    offsetY += dragAmount.y
                 }
             }
             .onGloballyPositioned { coords ->
@@ -138,24 +145,9 @@ fun LetSeeFloatingButton(
                 contentDescription = accessibilityLabel
             }
             .testTag("letsee_floating_button"),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(BUTTON_TO_CARD_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Quick-access mock panel — slides in from the right when a pending request is available.
-        AnimatedVisibility(
-            visible = showQuickAccess,
-            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
-            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
-        ) {
-            if (quickAccessRequest != null && specificMocks.isNotEmpty()) {
-                QuickAccessCard(
-                    request = quickAccessRequest,
-                    mocks = specificMocks,
-                    onMockSelected = onMockSelected,
-                )
-            }
-        }
-
         // Main FAB with pending-count badge.
         Box {
             FloatingActionButton(
@@ -197,6 +189,22 @@ fun LetSeeFloatingButton(
                 }
             }
         }
+
+        // Quick-access mock panel — appears on the RIGHT of the button.
+        AnimatedVisibility(
+            visible = showQuickAccess,
+            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
+        ) {
+            if (quickAccessRequest != null && specificMocks.isNotEmpty()) {
+                QuickAccessCard(
+                    request = quickAccessRequest,
+                    mocks = specificMocks,
+                    onMockSelected = onMockSelected,
+                    modifier = quickAccessWidth?.let { Modifier.width(it) } ?: Modifier,
+                )
+            }
+        }
     }
 }
 
@@ -213,7 +221,6 @@ private fun QuickAccessCard(
 ) {
     Card(
         modifier = modifier
-            .widthIn(max = 280.dp)
             .testTag("letsee_quick_access_card"),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
