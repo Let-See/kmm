@@ -50,59 +50,105 @@ Add the KMM repository as a Swift Package dependency:
 
 ### 1. Add mock JSON files
 
-Place your mock files in `src/main/assets/Mocks/`:
+LetSee reads mocks from Android's **`assets`** folder. Create a `Mocks` directory inside `src/main/assets/` with subfolders matching your API endpoint paths:
 
 ```
-assets/
+app/src/main/assets/
 └── Mocks/
+    ├── .ls.global.json          ← optional path mapping (see below)
     ├── products/
     │   ├── success_productList.json
     │   └── error_notFound.json
     └── categories/
         ├── success_categoryList.json
-        └── success_emptyList.json
+        ├── success_emptyList.json
+        └── filters/
+            └── success_filterList.json
 ```
+
+When LetSee intercepts a request to `https://api.example.com/products`, it shows all JSON files in the `Mocks/products/` folder for you to choose from.
+
+#### Path mapping with `.ls.global.json`
+
+If your API paths are complex (e.g., `/v2/staging/api/products`), you don't need to create deep nested folders. Add a `.ls.global.json` in the `Mocks/` root:
+
+```json
+{
+    "maps": [
+        { "folder": "/products", "to": "/v2/staging/api" },
+        { "folder": "/categories", "to": "/v1/api" }
+    ]
+}
+```
+
+This maps requests to `/v2/staging/api/products` → `Mocks/products/`.
 
 ### 2. Initialize LetSee
 
-In your `Application` class or main `Activity`:
+Two steps are needed: register the Android context in your `Application` class, then call `initLetSee()` and load mocks in your `Activity`.
+
+**Application class** — register in `AndroidManifest.xml` via `android:name=".MyApp"`:
 
 ```kotlin
+import android.app.Application
 import io.github.letsee.DefaultLetSee
-import io.github.letsee.initLetSee
+import io.github.letsee.implementations.setLetSeeAndroidContext
 
 class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        setLetSeeAndroidContext(this)
+    }
+}
+```
+
+**Activity** — initialize UI services, load mocks, and enable mocking:
+
+```kotlin
+import io.github.letsee.Configuration
+import io.github.letsee.DefaultLetSee
+import io.github.letsee.ui.initLetSee
+
+class MainActivity : ComponentActivity() {
+    private val letSee = DefaultLetSee.letSee
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         initLetSee()
+
+        letSee.setMocks(path = "Mocks")
+        letSee.setConfigurations(Configuration.default.copy(isMockEnabled = true))
+
+        setContent {
+            // ... your app content (see step 3)
+        }
     }
 }
 ```
 
 ### 3. Add the debug overlay (optional)
 
-Wrap your app content with `LetSeeOverlay` in your root composable:
+Wrap your app content with `LetSeeOverlay` to get a draggable floating button for picking mock responses at runtime:
 
 ```kotlin
 import io.github.letsee.ui.LetSeeOverlay
-import io.github.letsee.DefaultLetSee
 
 setContent {
-    LetSeeOverlay(DefaultLetSee.letSee) {
+    LetSeeOverlay(letSee) {
         MyAppContent()
     }
 }
 ```
 
-This adds a draggable floating button that lets you pick mock responses at runtime.
+### 4. Intercept network requests with OkHttp
 
-### 4. Intercept network requests
-
-Use the LetSee OkHttp interceptor to route requests through LetSee:
+Add the LetSee interceptor to your OkHttp client:
 
 ```kotlin
+import okhttp3.OkHttpClient
+
 val client = OkHttpClient.Builder()
-    .addInterceptor(DefaultLetSee.letSee.interceptor())
+    .addLetSee(letSee)
     .build()
 ```
 
