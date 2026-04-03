@@ -2,7 +2,7 @@
     "maps": [
         {
             "folder": "/breeds",
-            "to": "/v1/breeds"
+            "to": "/v1"
         },
         {
             "folder": "/arrangements",
